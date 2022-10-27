@@ -40,9 +40,13 @@ class DataGenerater(super):
     def simulate_data(self):
         for pid in range(self.num_patients):
             yield self.generate_ICD10_history(pid)
-
+def main(num_patients : int = typer.Argument(...), save_name: str = typer.Argument(..., 
+        help="name of the file to save the data to, should end with .pkl")):
+    generator = DataGenerater(num_patients, 2, 10, 1, 10, 1, 30, 10000)
+    with open(save_name, 'wb') as f:
+        pkl.dump([hist for hist in generator.simulate_data()], f)
 def test():
     generator = DataGenerater(100, 2, 10, 1, 10, 1, 30, 10000)
     print([hist for hist in generator.simulate_data()][-1])
 if __name__ == '__main__':
-    typer.run(test)
+    typer.run(main)
