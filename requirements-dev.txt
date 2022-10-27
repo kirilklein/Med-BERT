@@ -1,8 +1,0 @@
-coverage
-docutils
-nose
-nose-exclude
-Pygments
-pycodestyle
-twine
-sentencepiece
