@@ -25,10 +25,10 @@ class DataGenerater(super):
         num_visits = np.random.randint(self.min_num_visits, self.max_num_visits)
         num_codes_per_visit_ls = np.random.randint(self.min_num_codes_per_visit, self.max_num_codes_per_visit, 
             size=num_visits)
-        los_ls = list(np.random.randint(self.min_los, self.max_los, size=num_visits))
-        all_visit_codes = list(np.random.choice(codes, size=np.sum(num_codes_per_visit_ls), replace=False))
+        los_ls = np.random.randint(self.min_los, self.max_los, size=num_visits).tolist()
+        all_visit_codes = np.random.choice(codes, size=np.sum(num_codes_per_visit_ls), replace=True).tolist()
         visit_nums = np.arange(0, num_visits)
-        visit_nums = list(np.repeat(visit_nums, num_codes_per_visit_ls))
+        visit_nums = np.repeat(visit_nums, num_codes_per_visit_ls).tolist()
         return [pid, los_ls, all_visit_codes, visit_nums]
 
     def generate_randomICD10_codes(self, n):
