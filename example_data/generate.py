@@ -2,28 +2,47 @@ import numpy as np
 import pickle as pkl
 import multiprocessing as mp
 import string 
-import random
+import typer
 
 
 
 
 
 class DataGenerater(super):
-    def __init__(self, n_patients, min_num_codes, max_num_codes, min_num_visits, max_num_visits):
-        self.n_samples = n_patients
-    
-    def generate_ICD10_history(self):
-        pass
+    def __init__(self, num_patients, min_num_visits, max_num_visits, 
+        min_num_codes_per_visit, max_num_codes_per_visit, min_los, max_los, num_codes):
+        self.num_patients = num_patients
+        self.min_num_codes_per_visit = min_num_codes_per_visit
+        self.max_num_codes_per_visit = max_num_codes_per_visit
+        self.min_num_visits = min_num_visits
+        self.max_num_visits = max_num_visits
+        self.min_los = min_los
+        self.max_los = max_los
+        self.num_codes = num_codes
+
+    def generate_ICD10_history(self, pid):
+        codes = self.generate_randomICD10_codes(self.num_codes)
+        num_visits = np.random.randint(self.min_num_visits, self.max_num_visits)
+        num_codes_per_visit_ls = np.random.randint(self.min_num_codes_per_visit, self.max_num_codes_per_visit, 
+            size=num_visits)
+        los_ls = list(np.random.randint(self.min_los, self.max_los, size=num_visits))
+        all_visit_codes = list(np.random.choice(codes, size=np.sum(num_codes_per_visit_ls), replace=False))
+        visit_nums = np.arange(0, num_visits)
+        visit_nums = list(np.repeat(visit_nums, num_codes_per_visit_ls))
+        return [pid, los_ls, all_visit_codes, visit_nums]
+
     def generate_randomICD10_codes(self, n):
         letters = np.random.choice([char for char in string.ascii_uppercase], size=n, replace=True)
         numbers = np.random.choice(np.arange(1000), size=n, replace=True)
         codes = [letter + str(number).zfill(3)[:2] + '.' + str(number)[-1] for letter, number in zip(letters, numbers)]
         return codes
-    def simulate_visit(self):
-        pass
+
+    def simulate_data(self):
+        for pid in range(self.num_patients):
+            yield self.generate_ICD10_history(pid)
 
 def test():
-    generator = DataGenerater(1000, 5, 10, 5, 10)
-    print(generator.generate_randomICD10_codes(100))
+    generator = DataGenerater(100, 2, 10, 1, 10, 1, 30, 10000)
+    print([hist for hist in generator.simulate_data()][-1])
 if __name__ == '__main__':
-    test()
+    typer.run(test)
