@@ -1,7 +1,15 @@
 import pandas as pd
 import numpy as np
 import torch
-from tokenizer import EHRTokenizer
+import sys
+import os
+from os.path import join
+script_dir = os.path.dirname(os.path.abspath(__file__))
+medbert_dir = os.path.dirname(script_dir)
+if medbert_dir not in sys.path:
+    sys.path.append(os.path.dirname(medbert_dir))
+
+from med_bert.data.tokenizer import EHRTokenizer
 
 
 def pickle_data(icd_file='data/20210526/Aktive_problemliste_diagnoser.csv'):
