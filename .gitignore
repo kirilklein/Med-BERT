@@ -1,4 +1,6 @@
 .vscode
 __pycache__
-.pkl
-.pyc
+*.pkl
+*.pyc
+*.pt
+*.egg-info

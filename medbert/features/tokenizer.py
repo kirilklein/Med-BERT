@@ -20,22 +20,25 @@ class EHRTokenizer():
         return self.batch_encode(seq)
 
     def batch_encode(self, seqs, padding=True, truncation=None):
-        max_len = max([len(seq) for seq in seqs])
+        code_seqs = [seq[2] for seq in seqs] # icd codes
+        max_len = max([len(seq) for seq in code_seqs])
         
         output_seqs = []
 
-        for seq in seqs:
+        for seq in code_seqs:
             # Tokenizing
             tokenized_seq = self.encode(seq)
             # Padding
             if padding:
                 difference = max_len - len(tokenized_seq)
                 padded_seq = tokenized_seq + [self.vocabulary['[PAD]']] * difference
+            else: 
+                padded_seq = tokenized_seq
             # Truncating
             truncated_seq = padded_seq[:truncation]
 
             output_seqs.append(truncated_seq)
-
+        
         return output_seqs
 
     def encode(self, seq):
