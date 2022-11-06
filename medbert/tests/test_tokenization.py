@@ -1,7 +1,8 @@
 from medbert.features import tokenizer
 import pickle
 
-with open("data\\raw\\example_data.pkl", 'rb') as f:
+
+with open("data\\raw\\simulated\\example_data.pkl", 'rb') as f:
     data = pickle.load(f)
 
 Tokenizer = tokenizer.EHRTokenizer()
