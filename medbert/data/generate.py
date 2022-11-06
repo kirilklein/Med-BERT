@@ -4,10 +4,16 @@ import string
 import typer
 
 
-class DataGenerater(super):
+class DataGenerator(super):
     def __init__(self, num_patients, min_num_visits, max_num_visits, 
         min_num_codes_per_visit, max_num_codes_per_visit, min_los, 
         max_los, num_codes):
+        """
+        Simulates data as lists:
+            [pid, los_ls, all_visit_codes, visit_nums]
+        min_los, max_los: Length os stay in the hospital,
+        num_codes: total number of ICD10 codes to generate
+        """
         self.num_patients = num_patients
         self.min_num_codes_per_visit = min_num_codes_per_visit
         self.max_num_codes_per_visit = max_num_codes_per_visit
@@ -45,14 +51,19 @@ class DataGenerater(super):
 
 def main(num_patients : int = typer.Argument(...), 
         save_name: str = typer.Argument(..., 
-        help="name of the file to save the data to, should end with .pkl")):
-    generator = DataGenerater(num_patients, 2, 10, 1, 10, 1, 30, 10000)
+        help="name of the file to save the data to, should end with .pkl"),
+        min_num_visits: int = typer.Option(2),
+        max_num_visits: int = typer.Option(5),
+        min_num_codes_per_visit: int = typer.Option(1),
+        max_num_codes_per_visit: int = typer.Option(5),
+        min_los: int = typer.Option(1),
+        max_los: int = typer.Option(30),
+        num_codes: int = typer.Option(1000)):
+    generator = DataGenerator(num_patients, min_num_visits, max_num_visits, 
+        min_num_codes_per_visit, max_num_codes_per_visit, 
+        min_los, max_los, num_codes)
     with open(save_name, 'wb') as f:
         pkl.dump([hist for hist in generator.simulate_data()], f)
-
-def test():
-    generator = DataGenerater(100, 2, 10, 1, 10, 1, 30, 10000)
-    print([hist for hist in generator.simulate_data()][-1])
 
 if __name__ == '__main__':
     typer.run(main)
