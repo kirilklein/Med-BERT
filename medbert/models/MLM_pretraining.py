@@ -19,7 +19,7 @@ def main(data_file : str = typer.Argument(..., help="Tokenized data"),
     model.to(device)
     # activate training mode
     model.train()
-    
+
     # optimizer
     optim = AdamW(model.parameters(), lr=5e-5)
 
@@ -31,7 +31,20 @@ def main(data_file : str = typer.Argument(..., help="Tokenized data"),
     loader = torch.utils.data.DataLoader(dataset, batch_size=16, shuffle=True)
    
     for epoch in range(epochs):
-        print("epoch {epoch}/{epochs}")
+        print(f"epoch {epoch}/{epochs}")
         loop = tqdm(loader, leave=True)
-        for batch in loop:
+        for i, batch in enumerate(loop):
+            if i>1:
+                break
+            # initialize calculated grads
             optim.zero_grad()
+            # put all tensore batches required for training
+            input_ids = (batch['codes'] + batch['segments']).to(device)
+            attention_mask = batch['attention_mask'].to(device)
+            labels = batch['labels'].to(device)
+            # process
+            #mask_token_index = (input_ids == tokenizer.mask_token_id)[0].nonzero(as_tuple=True)[0]
+            logits = model(input_ids, attention_mask=attention_mask).logits
+            predicted_token_id = logits[0, 2].argmax(axis=-1)
+            print(predicted_token_id)
+            #print(outputs.shape)

@@ -4,7 +4,7 @@ import numpy as np
 def random_mask(codes, vocab):
     """One code is masked per patient"""
     masked_codes = codes
-    labels = len(codes) * [-1] # -1 is ignored by loss function
+    labels = len(codes) * [-100] # -100 is ignored by loss function
     mask_code = np.random.randint(len(codes))
     prob = np.random.uniform()    
     if prob < 0.8:

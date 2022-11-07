@@ -6,7 +6,6 @@ import torch
 
 class MLMLoader(Dataset):
     def __init__(self, data, vocab, max_len=512):
-        print(data.keys())
         self.vocab = vocab
         self.codes_all = data['codes']
         self.segments_all = data['segments']
@@ -22,7 +21,6 @@ class MLMLoader(Dataset):
         mask = np.ones(self.max_len)
         mask[len(codes):] = 0
         # mask 
-        #TODO: do we need original codes?
         masked_codes, labels = random_mask(codes, self.vocab) 
         # pad code sequence, segments and label
         pad_codes = seq_padding(masked_codes, self.max_len, self.vocab)
