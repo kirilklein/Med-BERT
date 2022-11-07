@@ -28,9 +28,12 @@ class MLMLoader(Dataset):
         pad_codes = seq_padding(masked_codes, self.max_len, self.vocab)
         pad_segments = seq_padding(segments, self.max_len, self.vocab)
         pad_labels = seq_padding(labels, self.max_len, self.vocab)
-
-        return torch.LongTensor(pad_codes), torch.LongTensor(pad_segments), \
-               torch.LongTensor(mask), torch.LongTensor(pad_labels)
+        output_dic = {
+            'codes':torch.LongTensor(pad_codes),
+            'segments':torch.LongTensor(pad_segments),
+            'attention_mask':torch.LongTensor(mask),
+            'labels':torch.LongTensor(pad_labels)}
+        return output_dic
 
     def __len__(self):
         return len(self.codes_all)
