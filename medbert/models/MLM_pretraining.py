@@ -18,10 +18,10 @@ def main(data_file : str = typer.Argument(..., help="Tokenized data"),
     vocab = torch.load(vocab_file)
     dataset = MLMLoader(data, vocab, max_len)
     loader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=True)
-    trainer = CustomTrainer(dataset, model, epochs, batch_size, save_dir)
+    trainer = CustomMLMTrainer(dataset, model, epochs, batch_size, save_dir)
     trainer()
 
-class CustomTrainer(Trainer):
+class CustomMLMTrainer(Trainer):
     def __init__(self, dataset, model, epochs, batch_size, save_dir, lr=5e-5, 
                 optimizer=torch.optim.AdamW):
         self.dataset = dataset
@@ -41,8 +41,6 @@ class CustomTrainer(Trainer):
         for epoch in range(self.epochs):
             loop = tqdm(loader, leave=True)
             for i, batch in enumerate(loop):
-                if i>1:
-                    break
                 # initialize calculated grads
                 optim.zero_grad()
                 # put all tensore batches required for training
