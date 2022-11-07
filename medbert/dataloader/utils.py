@@ -16,4 +16,4 @@ def random_mask(codes, vocab):
     return masked_codes, labels
 
 def seq_padding(seq, max_len, vocab):
-    return seq + (max_len-len(seq)) * vocab['PAD']
+    return seq + (max_len-len(seq)) * [vocab['PAD']]

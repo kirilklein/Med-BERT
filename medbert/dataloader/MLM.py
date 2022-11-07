@@ -5,12 +5,10 @@ import torch
 
 
 class MLMLoader(Dataset):
-    
-    def __init__(self, vocab_file, data_file, max_len=512):
-        self.vocab = torch.load(vocab_file)
-        data = torch.load(data_file)
+    def __init__(self, vocab, data, max_len=512):
+        self.vocab = vocab
         self.codes_all = data['codes']
-        self.segments_all = data['segment_ids']
+        self.segments_all = data['segments']
         self.max_len = max_len
 
     def __getitem__(self, index):
@@ -21,8 +19,7 @@ class MLMLoader(Dataset):
         segments = self.segments_all[index]
         # mask 0:len(code) to 1, padding to be 0
         mask = np.ones(self.max_len)
-        mask[len(codes):] = 0
-
+        mask[:len(codes)] = 0
         # mask 
         #TODO: do we need original codes?
         masked_codes, labels = random_mask(codes, self.vocab) 
@@ -37,23 +34,3 @@ class MLMLoader(Dataset):
     def __len__(self):
         return len(self.codes_all)
 
-
-
-
-
-
-
-
-
-
-        if padding:
-                if len(tokenized_code_seq)>max_len:
-                    tokenized_code_seq = tokenized_code_seq[:max_len]
-                difference = max_len - len(tokenized_code_seq)
-                padded_code_seq = tokenized_code_seq \
-                    + [self.vocabulary['PAD']] * difference
-                padded_visit_seq = visit_seq \
-                    + [self.vocabulary['PAD']] * difference
-            else: 
-                padded_code_seq = tokenized_code_seq
-                padded_visit_seq = visit_seq

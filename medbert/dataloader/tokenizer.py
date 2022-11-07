@@ -5,8 +5,8 @@ class EHRTokenizer():
     def __init__(self, vocabulary=None):
         if isinstance(vocabulary, type(None)):
             self.vocabulary = {
-                'PAD': 0,
-                'MASK': 1,
+                'PAD':0,
+                'MASK':1,
                 'UNK':2,
             }
         else:
@@ -44,6 +44,6 @@ class EHRTokenizer():
         return tokenized_data_dic
 
     def save_vocab(self, dest):
-        with open(dest, 'wb') as f:
-            torch.save(self.vocabulary, f)
+        print(f"Writing vocab to {dest}")
+        torch.save(self.vocabulary, dest)
 
