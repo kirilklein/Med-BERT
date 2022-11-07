@@ -20,7 +20,7 @@ class MLMLoader(Dataset):
         segments = self.segments_all[index]
         # mask 0:len(code) to 1, padding to be 0
         mask = np.ones(self.max_len)
-        mask[:len(codes)] = 0
+        mask[len(codes):] = 0
         # mask 
         #TODO: do we need original codes?
         masked_codes, labels = random_mask(codes, self.vocab) 
