@@ -1,25 +1,32 @@
 import torch
-
+from tqdm import tdqm
 
 class EHRTokenizer():
     def __init__(self, vocabulary=None):
-        if vocabulary is None:
-            self.new_vocab = True
+        if isinstance(vocabulary, type(None)):
             self.vocabulary = {
-                '[PAD]': 0,
-                '[CLS]': 1, 
-                '[SEP]': 2,
-                '[UNK]': 3,
-                '[MASK]': 4,
+                'PAD': 0,
+                'MASK': 1,
+                'UNK':2,
+                #'[CLS]': 1, 
+                #'[SEP]': 2,
+                #'[UNK]': 3,
             }
         else:
-            self.new_vocab = False
             self.vocabulary = vocabulary
 
     def __call__(self, seq):
         return self.batch_encode(seq)
 
-    def batch_encode(self, seqs, padding=True, truncation=None):
+    def encode(self, seq):
+        for code in seq:
+            if code not in self.vocabulary:
+                self.vocabulary[code] = len(self.vocabulary)
+        return [self.vocabulary[code] for code in seq]
+
+    def batch_encode(self, seqs, padding=True, truncation=512):
+        pat_ids = [seq[0] for seq in seqs]
+        los_seqs = [seq[1] for seq in seqs]
         code_seqs = [seq[2] for seq in seqs] # icd codes
         visit_seqs = [seq[3] for seq in seqs]
 
@@ -28,34 +35,27 @@ class EHRTokenizer():
         else:
             max_len = truncation
         
-        output_seqs = []
-
+        output_code_seqs = []
+        output_visit_seqs = []
         for code_seq, visit_seq in zip(code_seqs, visit_seqs):
             # Tokenizing
             tokenized_code_seq = self.encode(code_seq)
-            tokenized_visit_seq = 
             # Padding
             if padding:
                 if len(tokenized_code_seq)>max_len:
-                    padded_seq = tokenized_code_seq[:max_len]
+                    tokenized_code_seq = tokenized_code_seq[:max_len]
                 difference = max_len - len(tokenized_code_seq)
-                padded_seq = tokenized_code_seq + [self.vocabulary['[PAD]']] * difference
+                padded_code_seq = tokenized_code_seq \
+                    + [self.vocabulary['PAD']] * difference
+                padded_visit_seq = visit_seq \
+                    + [self.vocabulary['PAD']] * difference
             else: 
-                padded_seq = tokenized_code_seq
-            # Truncating
-            truncated_seq = padded_seq[:truncation]
-
-            output_seqs.append(truncated_seq)
-
-        return output_seqs
-
-    def encode(self, seq):
-        if self.new_vocab:
-            for code in seq:
-                if code not in self.vocabulary:
-                    self.vocabulary[code] = len(self.vocabulary)
-
-        return [self.vocabulary['[CLS]']] + [self.vocabulary[code] for code in seq] + [self.vocabulary['[SEP]']]
+                padded_code_seq = tokenized_code_seq
+                padded_visit_seq = visit_seq
+            output_code_seqs.append(padded_code_seq)
+            output_visit_seqs.append(padded_visit_seq)
+        tokenized_data_dic = {'ids':pat_ids, 'los':los_seqs, 'codes':code_seqs, 'segment_ids':visit_seqs}
+        return tokenized_data_dic
 
     def save_vocab(self, dest):
         with open(dest, 'wb') as f:
