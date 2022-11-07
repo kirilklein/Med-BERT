@@ -5,7 +5,8 @@ import torch
 
 
 class MLMLoader(Dataset):
-    def __init__(self, vocab, data, max_len=512):
+    def __init__(self, data, vocab, max_len=512):
+        print(data.keys())
         self.vocab = vocab
         self.codes_all = data['codes']
         self.segments_all = data['segments']
