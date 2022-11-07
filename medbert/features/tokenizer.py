@@ -1,5 +1,4 @@
 import torch
-from tqdm import tdqm
 
 class EHRTokenizer():
     def __init__(self, vocabulary=None):
@@ -54,7 +53,7 @@ class EHRTokenizer():
                 padded_visit_seq = visit_seq
             output_code_seqs.append(padded_code_seq)
             output_visit_seqs.append(padded_visit_seq)
-        tokenized_data_dic = {'ids':pat_ids, 'los':los_seqs, 'codes':code_seqs, 'segment_ids':visit_seqs}
+        tokenized_data_dic = {'ids':pat_ids, 'los':los_seqs, 'codes':output_code_seqs, 'segment_ids':output_visit_seqs}
         return tokenized_data_dic
 
     def save_vocab(self, dest):

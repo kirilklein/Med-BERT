@@ -33,7 +33,7 @@ class DataGenerator(super):
             .tolist()
         all_visit_codes = np.random.choice(codes, 
             size=np.sum(num_codes_per_visit_ls), replace=True).tolist()
-        visit_nums = np.arange(0, num_visits)
+        visit_nums = np.arange(1, num_visits+1) # should start with 1!
         visit_nums = np.repeat(visit_nums, num_codes_per_visit_ls).tolist()
         return [pid, los_ls, all_visit_codes, visit_nums]
 
