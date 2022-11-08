@@ -1,5 +1,5 @@
 #%%
 
 #%%
-dicd = {'a':1}
-dicd.get('a')
+a ={'a':2}
+a.values()

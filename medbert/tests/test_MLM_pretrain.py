@@ -12,4 +12,5 @@ MLM_pretraining.main(data_file=data_file, vocab_file=vocab_file,
         batch_size=64, 
         max_len=100,
         config_file="configs\\mlm_config.json",
-        load_path="models/mlm_pretrained/test.pt")
+        load_path="models/mlm_pretrained/test.pt",
+        checkpoint_freq=1)

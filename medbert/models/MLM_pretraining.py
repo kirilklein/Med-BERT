@@ -18,6 +18,7 @@ def main(data_file : str = typer.Argument(..., help="Tokenized data"),
     max_len : int = typer.Option(512, help="maximum number of tokens in seq"),
     config_file : str = typer.Option("configs\\mlm_config.json", 
         help="Location of the config file"),
+    checkpoint_freq : int = typer.Option(5, help="Frequency of checkpoints in epochs")
     ):
     #TODO Check intermediate size, is it 64?
     
