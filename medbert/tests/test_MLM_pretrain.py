@@ -1,10 +1,14 @@
 from medbert.models import MLM_pretraining
 from os.path import join
-import torch
+
 
 sim_data = "data\\raw\\simulated"
 data_file = join(sim_data, "example_data_tokenized.pt")
 vocab_file = join(sim_data, "example_data_vocab.pt")
 
-MLM_pretraining.main(data_file, vocab_file,"models/mlm_pretrained/test.pt", 
-        1, 32, 100)
+MLM_pretraining.main(data_file=data_file, vocab_file=vocab_file,
+        save_dir="models/mlm_pretrained/test.pt", 
+        epochs=1, 
+        batch_size=16, 
+        max_len=100,
+        config_file="configs\\mlm_config.json")
