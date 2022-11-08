@@ -7,8 +7,9 @@ data_file = join(sim_data, "example_data_tokenized.pt")
 vocab_file = join(sim_data, "example_data_vocab.pt")
 
 MLM_pretraining.main(data_file=data_file, vocab_file=vocab_file,
-        save_dir="models/mlm_pretrained/test.pt", 
+        save_path="models/mlm_pretrained/test.pt", 
         epochs=1, 
-        batch_size=16, 
+        batch_size=64, 
         max_len=100,
-        config_file="configs\\mlm_config.json")
+        config_file="configs\\mlm_config.json",
+        load_path="models/mlm_pretrained/test.pt")
