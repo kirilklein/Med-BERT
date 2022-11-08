@@ -4,7 +4,6 @@ from . import utils
 import torch
 import typer
 import json
-import os
 
 
 app = typer.Typer(name="pretraining", add_completion=False, help="MLM Pretraining")
@@ -18,7 +17,8 @@ def main(data_file : str = typer.Argument(..., help="Tokenized data"),
     max_len : int = typer.Option(512, help="maximum number of tokens in seq"),
     config_file : str = typer.Option("configs\\mlm_config.json", 
         help="Location of the config file"),
-    checkpoint_freq : int = typer.Option(5, help="Frequency of checkpoints in epochs")
+    checkpoint_freq : int = typer.Option(5, help="Frequency of checkpoints in epochs"),
+    from_checkpoint : bool = typer.Option(False, help="Load model from checkpoint")
     ):
     #TODO Check intermediate size, is it 64?
     
@@ -38,8 +38,8 @@ def main(data_file : str = typer.Argument(..., help="Tokenized data"),
         print(f"Load saved model from {load_path}")
         model = torch.load(load_path)
     dataset = MLMLoader(data, vocab, max_len)
-    loader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=True)
-    trainer = utils.CustomMLMTrainer(dataset, model, epochs, batch_size, save_path)
+    trainer = utils.CustomMLMTrainer(dataset, model, epochs, batch_size, save_path,
+                checkpoint_freq=checkpoint_freq, from_checkpoint=from_checkpoint)
     trainer()
     torch.save(model, save_path)
     print(f"Trained model saved to {save_path}")
