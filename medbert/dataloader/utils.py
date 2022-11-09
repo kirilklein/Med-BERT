@@ -17,3 +17,5 @@ def random_mask(codes, vocab):
 
 def seq_padding(seq, max_len, vocab):
     return seq + (max_len-len(seq)) * [vocab['PAD']]
+
+#TODO torch.utils.data.random_split

@@ -31,12 +31,15 @@ class CustomMLMTrainer(Trainer):
                 # initialize calculated grads
                 optim.zero_grad()
                 # put all tensore batches required for training
+                #TODO: pass segments as token_type_ids
                 input_ids = (batch['codes'] + batch['segments']).to(device)
                 attention_mask = batch['attention_mask'].to(device)
                 labels = batch['labels'].to(device)
                 # process
                 outputs = self.model(input_ids, 
-                            attention_mask=attention_mask, labels=labels)                
+                            attention_mask=attention_mask, labels=labels)    
+                #TODO: type_input_ids
+                #TODO: should we turn position embedding off            
                 # extract loss
                 loss = outputs.loss
                 # calculate loss for every parameter that needs grad update
@@ -127,3 +130,5 @@ class CustomLOSTrainer(CustomMLMTrainer):
                 print("Checkpoint")
                 self.save_checkpoint(epoch, self.model, optim, loss)
 
+# TODO
+# BertConfig(type_vocab_size=number_of_visits)
