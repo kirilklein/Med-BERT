@@ -20,24 +20,21 @@ def main(data_file : str = typer.Argument(..., help="Tokenized data"),
     checkpoint_freq : int = typer.Option(5, help="Frequency of checkpoints in epochs"),
     from_checkpoint : bool = typer.Option(False, help="Load model from checkpoint")
     ):
-    #TODO Check intermediate size, is it 64?
     
     data = torch.load(data_file)
     vocab = torch.load(vocab_file)
-    #model = BertForMaskedLM.from_pretrained('bert-base-uncased')
-    max_num_visits=30 # vocab_size has to be at least as large as the largest input id
-    
+
     if isinstance(load_path, type(None)):
         print("Initialize new model")
-        #config_file = str(config_file)
         with open(config_file) as f:
             config_dic = json.load(f)
-        config = BertConfig(vocab_size=len(vocab)+max_num_visits, **config_dic) 
+        config = BertConfig(vocab_size=len(vocab), **config_dic) 
         model = BertForMaskedLM(config)
     else:
         print(f"Load saved model from {load_path}")
         model = torch.load(load_path)
     dataset = MLMLoader(data, vocab, max_len)
+    #TODO: implement training schedule warmup
     trainer = utils.CustomMLMTrainer(dataset, model, epochs, batch_size, save_path,
                 checkpoint_freq=checkpoint_freq, from_checkpoint=from_checkpoint)
     trainer()
