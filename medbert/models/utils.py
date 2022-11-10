@@ -32,14 +32,14 @@ class CustomPreTrainer(Trainer):
                 optim.zero_grad()
                 # put all tensore batches required for training
                 #TODO: pass segments as token_type_ids
-                input_ids = (batch['codes'] + batch['segments']).to(device)
+                code_ids = batch['codes'].to(device)
+                segment_ids = batch['segments'].to(device)
                 attention_mask = batch['attention_mask'].to(device)
                 labels = batch['labels'].to(device)
                 # process
-                outputs = self.model(input_ids, 
+                outputs = self.model(input_ids=code_ids, 
                             attention_mask=attention_mask, labels=labels,
-                            token_tye)    
-                #TODO: type_input_ids
+                            token_type_ids=segment_ids, position_ids=None))    
                 #TODO: should we turn position embedding off            
                 # extract loss
                 loss = outputs.loss
