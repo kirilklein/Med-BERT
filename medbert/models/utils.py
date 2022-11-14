@@ -28,7 +28,7 @@ class CustomPreTrainer(Trainer):
         trainloader = torch.utils.data.DataLoader(self.val_dataset, 
                 batch_size=self.batch_size, shuffle=True)
         valloader = torch.utils.data.DataLoader(self.val_dataset, 
-                        batch_size=self.batch_size,shuffle=True)
+                        batch_size=len(self.val_dataset), shuffle=True)
         if self.from_checkpoint:
             self.model, optim = self.load_from_checkpoint(self.model, optim)
         self.model.train() # activate training mode  
@@ -74,7 +74,7 @@ class CustomPreTrainer(Trainer):
                             next_sentence_label=plos_label)                
                 # extract loss
                 val_loss = outputs.loss
-                val_loop.set_postfix({"val_lss":val_loss.item()})
+                val_loop.set_postfix({"val_loss":val_loss.item()})
             self.save_history(epoch, train_loss.item(), val_loss.item())
             if epoch%self.checkpoint_freq==0:
                 print("Checkpoint")
@@ -98,7 +98,7 @@ class CustomPreTrainer(Trainer):
                 f"{split(self.save_path)[1][:-3]}_history.txt")
         if not os.path.exists(hist_path):
             with open(hist_path, 'w') as f:
-                f.write(f"epoch loss\n")    
+                f.write(f"epoch train_loss val_loss\n")    
         with open(hist_path, 'a+') as f:
             f.write(f"{epoch} {train_loss:.4f} {val_loss:.4f}\n")
 

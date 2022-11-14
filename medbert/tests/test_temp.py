@@ -23,14 +23,19 @@ import os
 from os.path import join,split
 curdir = os.getcwd()
 curdir = split(split(curdir)[0])[0]
-vocab = torch.load(join(curdir,"data\\raw\\simulated\\vocab.pt"))
+vocab = torch.load(join(curdir,"data\\raw\\simulated\\example_data_vocab.pt"))
 data = pd.DataFrame({'codes':[[1,2],[2,3],[3,5],[1,4],[2,5]], 'segments':[1,2,3,4,5], 'los':[1,2,3,4,5]})
 
-train_size = int(0.8 * len(data))
+train_size = int(0.7 * len(data))
+
 test_size = len(data) - train_size
 #split data into train and test using torch.utils.data.random_split
 dataset = MLM_PLOS_Loader(data, vocab)
 
-train_dataset, test_dataset = random_split(dataset, [train_size, test_size])
+train_dataset, test_dataset = random_split(dataset, [.5, .5])
 #%%
-train_dataset.dataset.codes_all
+
+train_size = len(train_dataset)
+train_dataset.indices
+test_size = len(test_dataset)
+test_dataset.indices

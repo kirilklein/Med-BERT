@@ -40,7 +40,8 @@ class EHRTokenizer():
             tokenized_code_seq = self.encode(code_seq)
             output_code_seqs.append(tokenized_code_seq)
             output_visit_seqs.append(visit_seq)
-        tokenized_data_dic = {'pats':pat_ids, 'los':los_seqs, 'codes':output_code_seqs, 'segments':output_visit_seqs}
+        tokenized_data_dic = {'pats':pat_ids, 'los':los_seqs, 'codes':output_code_seqs, 
+                            'segments':output_visit_seqs}
         return tokenized_data_dic
 
     def save_vocab(self, dest):

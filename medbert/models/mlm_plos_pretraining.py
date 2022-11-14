@@ -38,7 +38,7 @@ def main(data_file : str = typer.Argument(..., help="Tokenized data"),
     config.seg_vocab_size = max_num_seg
     
     dataset = MLM_PLOS_Loader(data, vocab, max_len)
-    print(f"Use {config.validation_size} of data for validation")
+    print(f"Use {config.validation_size*100}% of data for validation")
     train_dataset, val_dataset = random_split(dataset, 
                     [1-config.validation_size, config.validation_size])
     
