@@ -1,7 +1,8 @@
 # Pytorch implementation of [Med_BERT](https://www.nature.com/articles/s41746-021-00455-y) based on Huggingface Transformers. 
 The implementaiton is largely based on BERT, using ICD10 codes instead of words and visits instead of sentences. 
 As pretraining tasks MLM and prolonged length of stay in the hospital (>7 days) are employed. The task will be fine-tuned for hospitalization/ICU prediction of COVID patients.
-In contrast to the original paper, no priority will be assigned to codes within a visit.
+>Rasmy, Laila, et al. "Med-BERT: pretrained contextualized embeddings on large-scale structured electronic health records for disease prediction." NPJ digital medicine 4.1 (2021): 1-13.
+
 ## Reproducing
 
 Run the following steps:
