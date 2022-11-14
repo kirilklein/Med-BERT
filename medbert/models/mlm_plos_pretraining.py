@@ -1,9 +1,10 @@
-from transformers import BertForMaskedLM, BertConfig
+from transformers import BertForPreTraining, BertConfig
 from medbert.dataloader.MLM import MLMLoader
 from . import utils
 import torch
 import typer
 import json
+import os
 
 
 app = typer.Typer(name="pretraining", add_completion=False, help="MLM Pretraining")
@@ -20,26 +21,25 @@ def main(data_file : str = typer.Argument(..., help="Tokenized data"),
     checkpoint_freq : int = typer.Option(5, help="Frequency of checkpoints in epochs"),
     from_checkpoint : bool = typer.Option(False, help="Load model from checkpoint")
     ):
-    
     data = torch.load(data_file)
     vocab = torch.load(vocab_file)
-
+    with open(config_file) as f:
+            config_dic = json.load(f)
+    config = BertConfig(vocab_size=len(vocab), **config_dic)
     if isinstance(load_path, type(None)):
         print("Initialize new model")
-        with open(config_file) as f:
-            config_dic = json.load(f)
-        config = BertConfig(vocab_size=len(vocab), **config_dic) 
-        model = BertForMaskedLM(config)
+        model = BertForPreTraining(config)
     else:
         print(f"Load saved model from {load_path}")
         model = torch.load(load_path)
+    config.vocab_size = len(vocab)
+    
     dataset = MLMLoader(data, vocab, max_len)
-    #TODO: implement training schedule warmup
-    trainer = utils.CustomMLMTrainer(dataset, model, epochs, batch_size, save_path,
-                checkpoint_freq=checkpoint_freq, from_checkpoint=from_checkpoint)
+    trainer = utils.CustomPreTrainer(dataset, model, epochs, batch_size, 
+                save_path, checkpoint_freq=checkpoint_freq, 
+                from_checkpoint=from_checkpoint, config=config_dic)
     trainer()
     torch.save(model, save_path)
     print(f"Trained model saved to {save_path}")
 if __name__=='__main__':
     typer.run(main)
-

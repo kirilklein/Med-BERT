@@ -1,6 +1,8 @@
 import random
 import numpy as np
 
+
+
 def random_mask(codes, vocab):
     """One code is masked per patient"""
     masked_codes = codes

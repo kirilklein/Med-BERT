@@ -4,11 +4,12 @@ from medbert.dataloader.utils import random_mask, seq_padding
 import torch
 
 
-class MLMLoader(Dataset):
+class MLM_PLOS_Loader(Dataset):
     def __init__(self, data, vocab, max_len=512):
         self.vocab = vocab
         self.codes_all = data['codes']
         self.segments_all = data['segments']
+        self.los_all = data['los']
         self.max_len = max_len
 
     def __getitem__(self, index):
@@ -17,6 +18,8 @@ class MLMLoader(Dataset):
         """
         codes = self.codes_all[index]
         segments = self.segments_all[index]
+        los = self.los_all[index]
+        plos = (np.array(los)>7).any()
         # mask 0:len(code) to 1, padding to be 0
         mask = np.ones(self.max_len)
         mask[len(codes):] = 0
@@ -30,7 +33,8 @@ class MLMLoader(Dataset):
             'codes':torch.LongTensor(pad_codes),
             'segments':torch.LongTensor(pad_segments),
             'attention_mask':torch.LongTensor(mask),
-            'labels':torch.LongTensor(pad_labels)}
+            'labels':torch.LongTensor(pad_labels),
+            'plos':torch.BoolTensor([plos])}
         return output_dic
 
     def __len__(self):
