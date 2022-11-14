@@ -24,13 +24,16 @@ class CustomPreTrainer(Trainer):
         self.model.to(device) # and move our model over to the selected device
         optim = self.optimizer(self.model.parameters(), lr=self.lr) # optimizer
         # Here trainloader and tesloader should be defined
-        loader = torch.utils.data.DataLoader(self.dataset, 
+
+        # testloader = torch.utils.data.DataLoader(self.dataset, 
+                # batch_size=self.batch_size,
+        trainloader = torch.utils.data.DataLoader(self.dataset, 
                 batch_size=self.batch_size, shuffle=True)
         if self.from_checkpoint:
             self.model, optim = self.load_from_checkpoint(self.model, optim)
         self.model.train() # activate training mode  
         for epoch in range(self.epochs):
-            loop = tqdm(loader, leave=True)
+            loop = tqdm(trainloader, leave=True)
             for batch in loop:
                 # initialize calculated grads
                 optim.zero_grad()

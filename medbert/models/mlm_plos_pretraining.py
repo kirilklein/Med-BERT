@@ -1,10 +1,10 @@
 from transformers import BertForPreTraining, BertConfig
-from medbert.dataloader.MLM import MLMLoader
+from medbert.dataloader.MLM_PLOS import MLM_PLOS_Loader
 from . import utils
 import torch
 import typer
 import json
-import os
+
 
 
 app = typer.Typer(name="pretraining", add_completion=False, help="MLM Pretraining")
@@ -34,7 +34,7 @@ def main(data_file : str = typer.Argument(..., help="Tokenized data"),
         model = torch.load(load_path)
     config.vocab_size = len(vocab)
     
-    dataset = MLMLoader(data, vocab, max_len)
+    dataset = MLM_PLOS_Loader(data, vocab, max_len)
     trainer = utils.CustomPreTrainer(dataset, model, epochs, batch_size, 
                 save_path, checkpoint_freq=checkpoint_freq, 
                 from_checkpoint=from_checkpoint, config=config_dic)
