@@ -4,8 +4,8 @@ from medbert.models import utils
 import torch
 import typer
 import json
-
-
+from torch.utils.data import random_split
+import pandas as pd
 
 app = typer.Typer(name="pretraining", add_completion=False, help="MLM Pretraining")
 @app.command()
@@ -23,6 +23,7 @@ def main(data_file : str = typer.Argument(..., help="Tokenized data"),
     from_checkpoint : bool = typer.Option(False, help="Load model from checkpoint")
     ):
     data = torch.load(data_file)
+    data = pd.DataFrame(data) 
     vocab = torch.load(vocab_file)
     with open(config_file) as f:
             config_dic = json.load(f)
@@ -35,9 +36,14 @@ def main(data_file : str = typer.Argument(..., help="Tokenized data"),
         model = torch.load(load_path)
     config.vocab_size = len(vocab)
     config.seg_vocab_size = max_num_seg
+    
     dataset = MLM_PLOS_Loader(data, vocab, max_len)
-    trainer = utils.CustomPreTrainer(dataset, model, epochs, batch_size, 
-                save_path, checkpoint_freq=checkpoint_freq, 
+    print(f"Use {config.validation_size} of data for validation")
+    train_dataset, val_dataset = random_split(dataset, 
+                    [1-config.validation_size, config.validation_size])
+    
+    trainer = utils.CustomPreTrainer(train_dataset, val_dataset, model, epochs, 
+                batch_size, save_path, checkpoint_freq=checkpoint_freq, 
                 from_checkpoint=from_checkpoint, config=config)
     trainer()
     torch.save(model, save_path)
