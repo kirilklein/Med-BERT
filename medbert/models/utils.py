@@ -38,7 +38,6 @@ class CustomPreTrainer(Trainer):
                 # initialize calculated grads
                 optim.zero_grad()
                 # put all tensore batches required for training
-                #TODO: pass segments as token_type_ids
                 code_ids = batch['codes'].to(device)
                 segment_ids = batch['segments'].to(device)
                 attention_mask = batch['attention_mask'].to(device)

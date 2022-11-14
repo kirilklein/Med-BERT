@@ -1,5 +1,5 @@
 from transformers import BertForPreTraining, BertConfig
-from medbert.dataloader.MLM_PLOS import MLM_PLOS_Loader
+from medbert.dataloader.mlm_plos_loader import MLM_PLOS_Loader
 from . import utils
 import torch
 import typer

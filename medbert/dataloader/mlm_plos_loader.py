@@ -34,7 +34,7 @@ class MLM_PLOS_Loader(Dataset):
             'segments':torch.LongTensor(pad_segments),
             'attention_mask':torch.LongTensor(mask),
             'labels':torch.LongTensor(pad_labels),
-            'plos':torch.BoolTensor([plos])}
+            'plos':torch.LongTensor([plos])}
         return output_dic
 
     def __len__(self):
