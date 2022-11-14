@@ -5,7 +5,7 @@ In contrast to the original paper, no priority will be assigned to codes within 
 ## Reproducing
 
 Run the following steps:
-    If you want an example dataset:
-        python medbert\data\generate.py num_patients save_name 
-    python medbert\data\tokenize_example_data.py input_data_file
+    If you want an example dataset:  
+        python medbert\data\generate.py num_patients save_name  
+    python medbert\data\tokenize_example_data.py input_data_file  
     python 
