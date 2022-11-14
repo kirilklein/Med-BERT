@@ -9,7 +9,8 @@ import pandas as pd
 
 app = typer.Typer(name="pretraining", add_completion=False, help="MLM Pretraining")
 @app.command()
-def main(data_file : str = typer.Argument(..., help="Tokenized data"),
+def main(
+    data_file : str = typer.Argument(..., help="Tokenized data"),
     vocab_file : str = typer.Argument(..., help=".pt vocab dic"),
     save_path : str = typer.Argument(...),
     epochs : int = typer.Argument(...),

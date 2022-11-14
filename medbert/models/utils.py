@@ -54,7 +54,7 @@ class CustomPreTrainer(Trainer):
                 train_loss.backward()
                 # update parameters
                 optim.step()
-                train_loop.set_description(f"epoch {epoch}/{self.epochs}")
+                train_loop.set_description(f"epoch {epoch}/{self.epochs} Training")
                 train_loop.set_postfix(loss=train_loss.item())
             # validation
             # TODO: validation every few epochs
@@ -74,6 +74,7 @@ class CustomPreTrainer(Trainer):
                             next_sentence_label=plos_label)                
                 # extract loss
                 val_loss = outputs.loss
+                val_loop.set_description(f"Validation")
                 val_loop.set_postfix({"val_loss":val_loss.item()})
             self.save_history(epoch, train_loss.item(), val_loss.item())
             if epoch%self.checkpoint_freq==0:
