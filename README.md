@@ -7,6 +7,6 @@ In contrast to the original paper, no priority will be assigned to codes within 
 Run the following steps:
 
     If you want an example dataset:  
-      python medbert\data\generate.py num_patients save_name  
-  python medbert\data\tokenize_example_data.py input_data_file  
-  python 
+      python data\generate.py <num_patients> <save_name> 
+    python data\tokenize_example_data.py <input_data_file>  
+    python models\mlm_plos_pretraining.py <path_to_tokenized_data> <path_to_vocab_file> <path_to_save_model> <epochs> 
