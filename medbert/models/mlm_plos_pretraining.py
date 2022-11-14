@@ -35,7 +35,6 @@ def main(data_file : str = typer.Argument(..., help="Tokenized data"),
         model = torch.load(load_path)
     config.vocab_size = len(vocab)
     config.seg_vocab_size = max_num_seg
-    print("seg_Vocab_size", config.seg_vocab_size, 'type', type(config.seg_vocab_size))
     dataset = MLM_PLOS_Loader(data, vocab, max_len)
     trainer = utils.CustomPreTrainer(dataset, model, epochs, batch_size, 
                 save_path, checkpoint_freq=checkpoint_freq, 
