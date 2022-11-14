@@ -45,7 +45,7 @@ class CustomPreTrainer(Trainer):
                 plos_label = batch['plos'].to(device)
                 embedding_output = self.embeddings(code_ids, segment_ids)
                 # process
-                outputs = self.model(input_embeds=embedding_output, 
+                outputs = self.model(inputs_embeds=embedding_output, 
                             attention_mask=attention_mask, labels=labels,
                             next_sentence_label=plos_label)                
                 # extract loss
