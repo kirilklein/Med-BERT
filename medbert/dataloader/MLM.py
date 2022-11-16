@@ -31,6 +31,7 @@ class MLMLoader(Dataset):
             'segments':torch.LongTensor(pad_segments),
             'attention_mask':torch.LongTensor(mask),
             'labels':torch.LongTensor(pad_labels)}
+        #TODO check BatchEncoding()
         return output_dic
 
     def __len__(self):
