@@ -1,0 +1,3 @@
+from MED-BERT directory run:
+python medbert\data\tokenize_example_data.py data\raw\simulated\example_data.pkl --max-len 100
+python medbert\models\mlm_plos_pretraining.py data\raw\simulated\example_data_tokenized.pt data\raw\simulated\example_data_vocab.pt models\mlm_pretrained\test.py 1
