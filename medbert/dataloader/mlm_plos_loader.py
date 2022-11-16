@@ -33,13 +33,8 @@ class MLM_PLOS_Loader(Dataset):
             'codes':torch.LongTensor(pad_codes),
             'segments':torch.LongTensor(pad_segments),
             'attention_mask':torch.LongTensor(mask),
-<<<<<<< HEAD:medbert/dataloader/MLM.py
-            'labels':torch.LongTensor(pad_labels)}
-        #TODO check BatchEncoding()
-=======
             'labels':torch.LongTensor(pad_labels),
             'plos':torch.LongTensor([plos])}
->>>>>>> 48d39a87d3fe4794617a658fc9117473207e713a:medbert/dataloader/mlm_plos_loader.py
         return output_dic
 
     def __len__(self):

@@ -10,7 +10,7 @@ def main(
         help="pickle list in the form [[pid1, los1, codes1, visit_nums1], ...]"),
     vocab_save_name: str = typer.Option(None, help="Path to save vocab, must end with .pt"),
     max_len: int = 
-        typer.Option(512, help="maximum number of tokens to keep for each visit"),
+        typer.Option(100, help="maximum number of tokens to keep for each visit"),
     ):
 
     with open(input_data_file, 'rb') as f:

@@ -6,6 +6,7 @@ import typer
 import json
 from torch.utils.data import random_split
 import pandas as pd
+from os.path import join
 
 app = typer.Typer(name="pretraining", add_completion=False, help="MLM Pretraining")
 @app.command()
@@ -18,7 +19,7 @@ def main(
     load_path : str = typer.Argument(None, help=".pt containing the model"),
     max_len : int = typer.Option(512, help="maximum number of tokens in seq"),
     max_num_seg : int = typer.Option(100, help="maximum number of segments in seq"),
-    config_file : str = typer.Option("configs\\pretrain_config.json", 
+    config_file : str = typer.Option(join('configs','pretrain_config.json'), 
         help="Location of the config file"),
     checkpoint_freq : int = typer.Option(5, help="Frequency of checkpoints in epochs"),
     from_checkpoint : bool = typer.Option(False, help="Load model from checkpoint")
