@@ -5,12 +5,15 @@ import torch
 
 
 class MLM_PLOS_Loader(Dataset):
-    def __init__(self, data, vocab, max_len=512):
+    def __init__(self, data, vocab, max_len=None):
         self.vocab = vocab
         self.codes_all = data['codes']
         self.segments_all = data['segments']
         self.los_all = data['los']
-        self.max_len = max_len
+        if isinstance(max_len, type(None)):
+            self.max_len = len(self.codes_all[0])
+        else:
+            self.max_len = max_len
 
     def __getitem__(self, index):
         """

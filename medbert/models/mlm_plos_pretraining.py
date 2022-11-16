@@ -17,7 +17,7 @@ def main(
     epochs : int = typer.Argument(...),
     batch_size : int = typer.Option(16),
     load_path : str = typer.Argument(None, help=".pt containing the model"),
-    max_len : int = typer.Option(512, help="maximum number of tokens in seq"),
+    max_len : int = typer.Option(None, help="maximum number of tokens in seq"),
     max_num_seg : int = typer.Option(100, help="maximum number of segments in seq"),
     config_file : str = typer.Option(join('configs','pretrain_config.json'), 
         help="Location of the config file"),
