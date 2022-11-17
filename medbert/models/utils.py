@@ -117,7 +117,7 @@ class CustomPreTrainer(Trainer):
         return model, optim
     
     def save_model(self):
-        if not os.path.exists(self.save_path):
+        if not os.path.exists(split(self.save_path)[0]):
             os.makedirs(split(self.save_path)[0])
         torch.save(self.model, self.save_path)
         print(f"Trained model saved to {self.save_path}")
