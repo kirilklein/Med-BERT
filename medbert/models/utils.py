@@ -100,6 +100,8 @@ class CustomPreTrainer(Trainer):
     def save_history(self, epoch, train_loss, val_loss=None):
         hist_path = join(split(self.save_path)[0], 
                 f"{split(self.save_path)[1][:-3]}_history.txt")
+        if not os.path.exists(split(self.save_path)[0]):
+            os.makedirs(split(self.save_path)[0])
         if not os.path.exists(hist_path):
             with open(hist_path, 'w') as f:
                 f.write(f"epoch train_loss val_loss\n")    
