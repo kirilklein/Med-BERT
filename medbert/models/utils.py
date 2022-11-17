@@ -4,6 +4,7 @@ import torch
 from tqdm import tqdm
 import os 
 from os.path import join, split
+import json
 
 class CustomPreTrainer(Trainer):
     def __init__(self, train_dataset, val_dataset, model, epochs, batch_size, save_path, lr=5e-5, 
@@ -19,6 +20,7 @@ class CustomPreTrainer(Trainer):
         self.save_path = save_path
         self.checkpoint_freq = checkpoint_freq
         self.from_checkpoint = from_checkpoint
+        self.config = config
         self.embeddings = BertEmbeddings(config=config)
     def __call__(self):
         device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
@@ -110,3 +112,11 @@ class CustomPreTrainer(Trainer):
         model.load_state_dict(checkpoint['model_state_dict'])
         optim.load_state_dict(checkpoint['optimizer_state_dict'])
         return model, optim
+    
+    def save_model(self):
+        if not os.path.exists(self.save_path):
+            os.makedirs(split(self.save_path)[0])
+        torch.save(self.model, self.save_path)
+        print(f"Trained model saved to {self.save_path}")
+        with open(join(split(self.save_path)[0], 'config.json'), 'w') as f:
+            json.dump(vars(self.config), f)

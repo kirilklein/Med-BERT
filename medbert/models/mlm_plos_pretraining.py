@@ -6,10 +6,10 @@ import typer
 import json
 from torch.utils.data import random_split
 import pandas as pd
-from os.path import join
+from os.path import join, split
+import os
 
-app = typer.Typer(name="pretraining", add_completion=False, help="MLM Pretraining")
-@app.command()
+
 def main(
     data_file : str = typer.Argument(..., help="Tokenized data"),
     vocab_file : str = typer.Argument(..., help=".pt vocab dic"),
@@ -24,6 +24,11 @@ def main(
     checkpoint_freq : int = typer.Option(5, help="Frequency of checkpoints in epochs"),
     from_checkpoint : bool = typer.Option(False, help="Load model from checkpoint")
     ):
+    args = locals()
+    typer.echo(f"Arguments: {args}")
+    with open(join(split(save_path)[0], 'log.json'), 'w') as f:
+        json.dump(args, f)
+
     data = torch.load(data_file)
     data = pd.DataFrame(data) 
     vocab = torch.load(vocab_file)
@@ -38,7 +43,8 @@ def main(
         model = torch.load(load_path)
     config.vocab_size = len(vocab)
     config.seg_vocab_size = max_num_seg
-    
+    typer.echo(f"Config: {vars(config)}")
+
     dataset = MLM_PLOS_Loader(data, vocab, max_len)
     print(f"Use {config.validation_size*100}% of data for validation")
     train_dataset, val_dataset = random_split(dataset, 
@@ -48,7 +54,7 @@ def main(
                 batch_size, save_path, checkpoint_freq=checkpoint_freq, 
                 from_checkpoint=from_checkpoint, config=config)
     trainer()
-    torch.save(model, save_path)
-    print(f"Trained model saved to {save_path}")
+    trainer.save_model()
+    
 if __name__=='__main__':
     typer.run(main)
