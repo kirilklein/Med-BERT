@@ -26,8 +26,6 @@ def main(
     ):
     args = locals()
     typer.echo(f"Arguments: {args}")
-    with open(join(split(save_path)[0], 'log.json'), 'w') as f:
-        json.dump(args, f)
 
     data = torch.load(data_file)
     data = pd.DataFrame(data) 
@@ -52,7 +50,7 @@ def main(
     
     trainer = utils.CustomPreTrainer(train_dataset, val_dataset, model, epochs, 
                 batch_size, save_path, checkpoint_freq=checkpoint_freq, 
-                from_checkpoint=from_checkpoint, config=config)
+                from_checkpoint=from_checkpoint, config=config, args=args)
     trainer()
     trainer.save_model()
     
