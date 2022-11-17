@@ -28,9 +28,9 @@ class CustomPreTrainer(Trainer):
         self.model.to(device) # and move our model over to the selected device
         optim = self.optimizer(self.model.parameters(), lr=self.lr) # optimizer
         
-        trainloader = torch.utils.data.DataLoader(self.val_dataset, 
+        trainloader = torch.utils.data.DataLoader(self.val_dataset,   # type: ignore
                 batch_size=self.batch_size, shuffle=True)
-        valloader = torch.utils.data.DataLoader(self.val_dataset, 
+        valloader = torch.utils.data.DataLoader(self.val_dataset,   # type: ignore
                         batch_size=len(self.val_dataset), shuffle=True)
         if self.from_checkpoint:
             self.model, optim = self.load_from_checkpoint(self.model, optim)
@@ -79,12 +79,12 @@ class CustomPreTrainer(Trainer):
                 val_loss = outputs.loss
                 val_loop.set_description(f"Validation")
                 val_loop.set_postfix({"val_loss":val_loss.item()})
-            self.save_history(epoch, train_loss.item(), val_loss.item())
+            self.save_history(epoch, train_loss.item(), val_loss.item()) # type: ignore
             if epoch%self.checkpoint_freq==0:
                 print("Checkpoint")
                 self.save_checkpoint(epoch, self.model, optim, 
-                                    train_loss.item(), val_loss.item())
-            
+                                    train_loss.item(), val_loss.item()) # type: ignore
+            #TODO introduce training scheduler
 
     def save_checkpoint(self, epoch, model, optim, train_loss, val_loss):
         checkpoint_path = join(split(self.save_path)[0], 
