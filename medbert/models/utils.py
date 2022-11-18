@@ -4,11 +4,12 @@ import torch
 from tqdm import tqdm
 import os 
 from os.path import join, split
+import json
 
 class CustomPreTrainer(Trainer):
     def __init__(self, train_dataset, val_dataset, model, epochs, batch_size, save_path, lr=5e-5, 
                 optimizer=torch.optim.AdamW, checkpoint_freq=5, from_checkpoint=False,
-                config=None):
+                config=None, args=None):
         self.train_dataset = train_dataset
         self.val_dataset = val_dataset
         self.model = model
@@ -19,15 +20,17 @@ class CustomPreTrainer(Trainer):
         self.save_path = save_path
         self.checkpoint_freq = checkpoint_freq
         self.from_checkpoint = from_checkpoint
+        self.config = config
         self.embeddings = BertEmbeddings(config=config)
+        self.args = args
     def __call__(self):
         device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
         self.model.to(device) # and move our model over to the selected device
         optim = self.optimizer(self.model.parameters(), lr=self.lr) # optimizer
         
-        trainloader = torch.utils.data.DataLoader(self.val_dataset, 
+        trainloader = torch.utils.data.DataLoader(self.val_dataset,   # type: ignore
                 batch_size=self.batch_size, shuffle=True)
-        valloader = torch.utils.data.DataLoader(self.val_dataset, 
+        valloader = torch.utils.data.DataLoader(self.val_dataset,   # type: ignore
                         batch_size=len(self.val_dataset), shuffle=True)
         if self.from_checkpoint:
             self.model, optim = self.load_from_checkpoint(self.model, optim)
@@ -76,12 +79,12 @@ class CustomPreTrainer(Trainer):
                 val_loss = outputs.loss
                 val_loop.set_description(f"Validation")
                 val_loop.set_postfix({"val_loss":val_loss.item()})
-            self.save_history(epoch, train_loss.item(), val_loss.item())
+            self.save_history(epoch, train_loss.item(), val_loss.item()) # type: ignore
             if epoch%self.checkpoint_freq==0:
                 print("Checkpoint")
                 self.save_checkpoint(epoch, self.model, optim, 
-                                    train_loss.item(), val_loss.item())
-            
+                                    train_loss.item(), val_loss.item()) # type: ignore
+            #TODO introduce training scheduler
 
     def save_checkpoint(self, epoch, model, optim, train_loss, val_loss):
         checkpoint_path = join(split(self.save_path)[0], 
@@ -97,6 +100,8 @@ class CustomPreTrainer(Trainer):
     def save_history(self, epoch, train_loss, val_loss=None):
         hist_path = join(split(self.save_path)[0], 
                 f"{split(self.save_path)[1][:-3]}_history.txt")
+        if not os.path.exists(split(self.save_path)[0]):
+            os.makedirs(split(self.save_path)[0])
         if not os.path.exists(hist_path):
             with open(hist_path, 'w') as f:
                 f.write(f"epoch train_loss val_loss\n")    
@@ -110,3 +115,13 @@ class CustomPreTrainer(Trainer):
         model.load_state_dict(checkpoint['model_state_dict'])
         optim.load_state_dict(checkpoint['optimizer_state_dict'])
         return model, optim
+    
+    def save_model(self):
+        if not os.path.exists(split(self.save_path)[0]):
+            os.makedirs(split(self.save_path)[0])
+        torch.save(self.model, self.save_path)
+        print(f"Trained model saved to {self.save_path}")
+        with open(join(split(self.save_path)[0], 'config.json'), 'w') as f:
+            json.dump(vars(self.config), f)
+        with open(join(split(self.save_path)[0], 'log.json'), 'w') as f:
+            json.dump(self.args, f)
