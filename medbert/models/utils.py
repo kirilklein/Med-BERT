@@ -31,7 +31,7 @@ class CustomPreTrainer(Trainer):
         trainloader = torch.utils.data.DataLoader(self.val_dataset,   # type: ignore
                 batch_size=self.batch_size, shuffle=True)
         valloader = torch.utils.data.DataLoader(self.val_dataset,   # type: ignore
-                        batch_size=len(self.val_dataset), shuffle=True)
+                        batch_size=self.batch_size*2, shuffle=True)
         if self.from_checkpoint:
             self.model, optim = self.load_from_checkpoint(self.model, optim)
         self.model.train() # activate training mode  
