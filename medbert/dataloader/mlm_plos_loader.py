@@ -11,7 +11,7 @@ class MLM_PLOS_Loader(Dataset):
         self.segments_all = data['segments']
         self.los_all = data['los']
         if isinstance(max_len, type(None)):
-            self.max_len = len(self.codes_all[0])
+            self.max_len = np.max(np.array(len(code_ls) for code_ls in self.codes_all))
         else:
             self.max_len = max_len
 
