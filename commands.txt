@@ -4,6 +4,6 @@ python medbert\dataloader\tokenizer.py data\raw\simulated\example_data.pkl
 linux:
 python medbert/dataloader/tokenizer.py data/raw/simulated/example_data.pkl 
 windows:
-python medbertmodels\mlm_plos_pretraining.py data\raw\simulated\example_data_tokenized.pt data\raw\simulated\example_data_vocab.pt models\mlm_pretrained\test.py 1
+python medbert\models\mlm_plos_pretraining.py data\tokenized\example_data_tokenized.pt data\tokenized\example_data_vocab.pt models\mlm_pretrained\test.py 1
 linux:
 python medbertmodels/mlm_plos_pretraining.py data/raw/simulated/example_data_tokenized.pt data/raw/simulated/example_data_vocab.pt models\mlm_pretrained\test.py 1
