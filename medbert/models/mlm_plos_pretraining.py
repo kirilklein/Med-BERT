@@ -7,6 +7,7 @@ import json
 from torch.utils.data import random_split
 import pandas as pd
 
+
 app = typer.Typer(name="pretraining", add_completion=False, help="MLM Pretraining")
 @app.command()
 def main(
@@ -23,6 +24,7 @@ def main(
     checkpoint_freq : int = typer.Option(5, help="Frequency of checkpoints in epochs"),
     from_checkpoint : bool = typer.Option(False, help="Load model from checkpoint")
     ):
+    #TODO make paths compatible with Linux
     data = torch.load(data_file)
     data = pd.DataFrame(data) 
     vocab = torch.load(vocab_file)
