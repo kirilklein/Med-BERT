@@ -10,12 +10,6 @@ from os.path import join
 import numpy as np
 
 
-<<<<<<< HEAD
-
-app = typer.Typer(name="pretraining", add_completion=False, help="MLM Pretraining")
-@app.command()
-=======
->>>>>>> d06f8a73e677b6c3b1cf7801b7c9ab8b3d6c2dec
 def main(
     data_file : str = typer.Argument(..., help="Tokenized data"),
     vocab_file : str = typer.Argument(..., help=".pt vocab dic"),
@@ -30,13 +24,9 @@ def main(
     checkpoint_freq : int = typer.Option(5, help="Frequency of checkpoints in epochs"),
     from_checkpoint : bool = typer.Option(False, help="Load model from checkpoint")
     ):
-<<<<<<< HEAD
-    #TODO make paths compatible with Linux
-=======
     args = locals()
     typer.echo(f"Arguments: {args}")
 
->>>>>>> d06f8a73e677b6c3b1cf7801b7c9ab8b3d6c2dec
     data = torch.load(data_file)
     if isinstance(max_num_seg, type(None)):
         max_num_seg = int(np.max([max(segs) for segs in data['segments']]))
