@@ -23,11 +23,11 @@ def main(
     tokenized_data_dic = Tokenizer.batch_encode(data, max_len=max_len)
     if isinstance(vocab_save_path, type(None)):
         data_dir = split(split(input_data_path)[0])[0]
-        vocab_save_path = join(join(data_dir, 'tokenized', split(input_data_path)[1][:-4]+"_vocab.pt"))
+        vocab_save_path = join(join(data_dir, 'vocab', split(input_data_path)[1][:-4]+".pt"))
     Tokenizer.save_vocab(vocab_save_path)
     if isinstance(out_data_path, type(None)):
         data_dir = split(split(input_data_path)[0])[0]
-        out_data_path = join(join(data_dir, 'tokenized', split(input_data_path)[1][:-4]+"_tokenized.pt"))
+        out_data_path = join(join(data_dir, 'tokenized', split(input_data_path)[1][:-4]+".pt"))
     print(f"Save tokenized data to {out_data_path}")
     torch.save(tokenized_data_dic, out_data_path)
     
