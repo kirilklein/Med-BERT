@@ -1,6 +1,6 @@
 from transformers import Trainer
 from medbert.dataloader.embeddings import BertEmbeddings
-from medbert.common import common
+from medbert.common import common, pytorch
 import torch
 from tqdm import tqdm
 import os 
@@ -43,16 +43,14 @@ class CustomPreTrainer(Trainer):
                 # initialize calculated grads
                 optim.zero_grad()
                 # put all tensore batches required for training
-                code_ids = batch['codes'].to(device)
-                segment_ids = batch['segments'].to(device)
-                attention_mask = batch['attention_mask'].to(device)
-                labels = batch['labels'].to(device)
-                plos_label = batch['plos'].to(device)
-                embedding_output = self.embeddings(code_ids, segment_ids)
+                pytorch.batch_to_device(batch, device)
+                # get embeddings
+                embedding_output = self.embeddings(batch['codes'], batch['segments'])
                 # process
                 outputs = self.model(inputs_embeds=embedding_output, 
-                            attention_mask=attention_mask, labels=labels,
-                            next_sentence_label=plos_label)                
+                            attention_mask=batch['attention_mask'], 
+                            labels=batch['labels'],
+                            next_sentence_label=batch['plos'])                
                 # extract loss
                 train_loss = outputs.loss
                 # calculate loss for every parameter that needs grad update
@@ -70,16 +68,15 @@ class CustomPreTrainer(Trainer):
             with torch.no_grad():
                 for val_batch in val_loop:
                     # put all tensor batches required for training
-                    code_ids = val_batch['codes'].to(device)
-                    segment_ids = val_batch['segments'].to(device)
-                    attention_mask = val_batch['attention_mask'].to(device)
-                    labels = val_batch['labels'].to(device)
-                    plos_label = val_batch['plos'].to(device)
-                    embedding_output = self.embeddings(code_ids, segment_ids)
+                    pytorch.batch_to_device(val_batch, device)
+                    # get embeddings
+                    embedding_output = self.embeddings(val_batch['codes'], 
+                                                        val_batch['segments'])
                     # process
                     outputs = self.model(inputs_embeds=embedding_output, 
-                                attention_mask=attention_mask, labels=labels,
-                                next_sentence_label=plos_label)                
+                                attention_mask=val_batch['attention_mask'], 
+                                labels=val_batch['labels'],
+                                next_sentence_label=val_batch['plos'])                
                     # extract loss
                     val_loss = outputs.loss
                     val_loss_avg += val_loss.item()/len(valloader)
