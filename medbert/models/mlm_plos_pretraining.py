@@ -13,9 +13,9 @@ import numpy as np
 def main(
     data_file : str = typer.Argument(..., help="Tokenized data"),
     vocab_file : str = typer.Argument(..., help=".pt vocab dic"),
-    save_path : str = typer.Argument(...),
-    epochs : int = typer.Argument(...),
-    batch_size : int = typer.Option(16),
+    save_path : str = typer.Argument(..., help="Path to save model"),
+    epochs : int = typer.Argument(..., help="Number of epochs"),
+    batch_size : int = typer.Option(32, help="Batch size"),
     load_path : str = typer.Option(None, help=".pt containing the model"),
     max_len : int = typer.Option(None, help="maximum number of tokens in seq"),
     max_num_seg : int = typer.Option(100, help="maximum number of segments in seq"),
