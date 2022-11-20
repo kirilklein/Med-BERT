@@ -68,7 +68,7 @@ class CustomPreTrainer(Trainer):
             with torch.no_grad():
                 for val_batch in val_loop:
                     # put all tensor batches required for training
-                    batch = pytorch.batch_to_device(val_batch, device)
+                    val_batch = pytorch.batch_to_device(val_batch, device)
                     # get embeddings
                     embedding_output = self.embeddings(val_batch['codes'], 
                                                         val_batch['segments'])
