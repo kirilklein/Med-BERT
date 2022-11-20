@@ -1,4 +1,4 @@
-name: transformers
+name: medbert
 channels:
   - HuggingFace
   - pytorch

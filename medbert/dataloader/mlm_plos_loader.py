@@ -5,12 +5,15 @@ import torch
 
 
 class MLM_PLOS_Loader(Dataset):
-    def __init__(self, data, vocab, max_len=512):
+    def __init__(self, data, vocab, max_len=None):
         self.vocab = vocab
         self.codes_all = data['codes']
         self.segments_all = data['segments']
         self.los_all = data['los']
-        self.max_len = max_len
+        if isinstance(max_len, type(None)):
+            self.max_len = int(np.max(np.array([len(code_ls) for code_ls in self.codes_all])))
+        else:
+            self.max_len = max_len
 
     def __getitem__(self, index):
         """
@@ -34,8 +37,12 @@ class MLM_PLOS_Loader(Dataset):
             'segments':torch.Tensor(pad_segments),
             'attention_mask':torch.LongTensor(mask),
             'labels':torch.LongTensor(pad_labels),
+<<<<<<< HEAD
             'plos':torch.BoolTensor([plos])}
             # use batchencoding
+=======
+            'plos':torch.LongTensor([plos])}
+>>>>>>> d06f8a73e677b6c3b1cf7801b7c9ab8b3d6c2dec
         return output_dic
 
     def __len__(self):

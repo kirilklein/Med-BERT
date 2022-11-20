@@ -6,26 +6,40 @@ import typer
 import json
 from torch.utils.data import random_split
 import pandas as pd
+from os.path import join
+import numpy as np
 
+
+<<<<<<< HEAD
 
 app = typer.Typer(name="pretraining", add_completion=False, help="MLM Pretraining")
 @app.command()
+=======
+>>>>>>> d06f8a73e677b6c3b1cf7801b7c9ab8b3d6c2dec
 def main(
     data_file : str = typer.Argument(..., help="Tokenized data"),
     vocab_file : str = typer.Argument(..., help=".pt vocab dic"),
-    save_path : str = typer.Argument(...),
-    epochs : int = typer.Argument(...),
-    batch_size : int = typer.Option(16),
-    load_path : str = typer.Argument(None, help=".pt containing the model"),
-    max_len : int = typer.Option(512, help="maximum number of tokens in seq"),
+    save_path : str = typer.Argument(..., help="Path to save model"),
+    epochs : int = typer.Argument(..., help="Number of epochs"),
+    batch_size : int = typer.Option(32, help="Batch size"),
+    load_path : str = typer.Option(None, help=".pt containing the model"),
+    max_len : int = typer.Option(None, help="maximum number of tokens in seq"),
     max_num_seg : int = typer.Option(100, help="maximum number of segments in seq"),
-    config_file : str = typer.Option("configs\\pretrain_config.json", 
+    config_file : str = typer.Option(join('configs','pretrain_config.json'), 
         help="Location of the config file"),
     checkpoint_freq : int = typer.Option(5, help="Frequency of checkpoints in epochs"),
     from_checkpoint : bool = typer.Option(False, help="Load model from checkpoint")
     ):
+<<<<<<< HEAD
     #TODO make paths compatible with Linux
+=======
+    args = locals()
+    typer.echo(f"Arguments: {args}")
+
+>>>>>>> d06f8a73e677b6c3b1cf7801b7c9ab8b3d6c2dec
     data = torch.load(data_file)
+    if isinstance(max_num_seg, type(None)):
+        max_num_seg = int(np.max([max(segs) for segs in data['segments']]))
     data = pd.DataFrame(data) 
     vocab = torch.load(vocab_file)
     with open(config_file) as f:
@@ -39,17 +53,19 @@ def main(
         model = torch.load(load_path)
     config.vocab_size = len(vocab)
     config.seg_vocab_size = max_num_seg
-    
+    typer.echo(f"Config: {vars(config)}")
+
     dataset = MLM_PLOS_Loader(data, vocab, max_len)
     print(f"Use {config.validation_size*100}% of data for validation")
     train_dataset, val_dataset = random_split(dataset, 
-                    [1-config.validation_size, config.validation_size])
+                    [1-config.validation_size, config.validation_size],
+                    generator=torch.Generator().manual_seed(42))
     
     trainer = utils.CustomPreTrainer(train_dataset, val_dataset, model, epochs, 
                 batch_size, save_path, checkpoint_freq=checkpoint_freq, 
-                from_checkpoint=from_checkpoint, config=config)
+                from_checkpoint=from_checkpoint, config=config, args=args)
     trainer()
-    torch.save(model, save_path)
-    print(f"Trained model saved to {save_path}")
+    trainer.save_model()
+    
 if __name__=='__main__':
     typer.run(main)
