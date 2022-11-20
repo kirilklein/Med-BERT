@@ -1,62 +1,43 @@
-import 
+from os.path import join, split
+import json
+import torch
+from transformers import BertForPreTraining, BertConfig
+import numpy as np
+
 
 class Encoding():
-    def __init__(self, model_name, model_path, tokenizer_path, max_len):
-        self.model_name = model_name
+    def __init__(self, model_path, tokenized_data_path, from_checkpoint=False):
         self.model_path = model_path
-        self.tokenizer_path = tokenizer_path
-        self.max_len = max_len
+        self.model_dir = split(model_path)[0]
+        self.tokenized_data_path = tokenized_data_path
+        self.vocab = self.get_vocab()
+        self.from_checkpoint = from_checkpoint
+        self.model = self.get_model()
+        self.input = self.get_input()
 
-    def get_tokenizer(self):
-        if self.tokenizer_path is not None:
-            tokenizer = BertTokenizer.from_pretrained(self.tokenizer_path)
-        else:
-            tokenizer = BertTokenizer.from_pretrained(self.model_name)
-        return tokenizer
+    def get_vocab(self):
+        tok_data_dir = split(self.tokenized_data_path)[0]
+        vocab_path = join(tok_data_dir, split(self.tokenized_data_path)[1][-12:]+"_vocab.pt")
+        vocab = torch.load(vocab_path)
+        return vocab
 
     def get_model(self):
-        if self.model_path is not None:
-            model = BertModel.from_pretrained(self.model_path)
+        if self.from_checkpoint:
+            checkpoint_path = join(self.model_dir, "checkpoint.pt")
+            checkpoint = torch.load(checkpoint_path)
+            config = checkpoint['config']
+            model = BertForPreTraining(config)
+            model.load_state_dict(checkpoint['model_state_dict'])
         else:
-            model = BertModel.from_pretrained(self.model_name)
+            model = torch.load(self.model_path)
         return model
 
-    def get_encoding(self, text):
-        tokenizer = self.get_tokenizer()
-        model = self.get_model()
-        encoded = tokenizer.encode_plus(
-            text,
-            add_special_tokens=True,
-            max_length=self.max_len,
-            return_token_type_ids=False,
-            pad_to_max_length=True,
-            return_attention_mask=True,
-            return_tensors='pt',
-            truncation=True
-        )
-        input_ids = encoded['input_ids']
-        attention_mask = encoded['attention_mask']
+    def get_encoding(self):
         with torch.no_grad():
-            last_hidden_states = model(input_ids, attention_mask=attention_mask)
+            last_hidden_states = self.model(self.input)
         features = last_hidden_states[0][:, 0, :].numpy()
         return features
 
-    def get_encoding_batch(self, texts):
-        tokenizer = self.get_tokenizer()
-        model = self.get_model()
-        encoded = tokenizer.batch_encode_plus(
-            texts,
-            add_special_tokens=True,
-            max_length=self.max_len,
-            return_token_type_ids=False,
-            pad_to_max_length=True,
-            return_attention_mask=True,
-            return_tensors='pt',
-            truncation=True
-        )
-        input_ids = encoded['input_ids']
-        attention_mask = encoded['attention_mask']
-        with torch.no_grad():
-            last_hidden_states = model(input_ids, attention_mask=attention_mask)
-        features = last_hidden_states[0][:, 0, :].numpy()
-        return features
+    def get_input(self):
+        input = np.zeros((10,10))
+        return input

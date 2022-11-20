@@ -99,7 +99,8 @@ class CustomPreTrainer(Trainer):
             'model_state_dict':model.state_dict(),
             'optimizer_state_dict':optim.state_dict(),
             'train_loss':train_loss,
-            'val_loss':val_loss
+            'val_loss':val_loss,
+            'config':self.config,
         }, checkpoint_path)
     
     def save_history(self, epoch, batch, train_loss, val_loss=-100):
