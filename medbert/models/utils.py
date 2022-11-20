@@ -30,7 +30,7 @@ class CustomPreTrainer(Trainer):
         self.model.to(device) # and move our model over to the selected device
         optim = self.optimizer(self.model.parameters(), lr=self.lr) # optimizer
         
-        trainloader = torch.utils.data.DataLoader(self.val_dataset,   # type: ignore
+        trainloader = torch.utils.data.DataLoader(self.train_dataset,   # type: ignore
                 batch_size=self.batch_size, shuffle=True)
         valloader = torch.utils.data.DataLoader(self.val_dataset,   # type: ignore
                         batch_size=self.batch_size*2, shuffle=True)
@@ -43,7 +43,7 @@ class CustomPreTrainer(Trainer):
                 # initialize calculated grads
                 optim.zero_grad()
                 # put all tensore batches required for training
-                pytorch.batch_to_device(batch, device)
+                batch = pytorch.batch_to_device(batch, device)
                 # get embeddings
                 embedding_output = self.embeddings(batch['codes'], batch['segments'])
                 # process
@@ -68,7 +68,7 @@ class CustomPreTrainer(Trainer):
             with torch.no_grad():
                 for val_batch in val_loop:
                     # put all tensor batches required for training
-                    pytorch.batch_to_device(val_batch, device)
+                    batch = pytorch.batch_to_device(val_batch, device)
                     # get embeddings
                     embedding_output = self.embeddings(val_batch['codes'], 
                                                         val_batch['segments'])
