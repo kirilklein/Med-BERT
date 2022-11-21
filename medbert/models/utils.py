@@ -8,9 +8,9 @@ from os.path import join, split
 import json
 
 class CustomPreTrainer(Trainer):
-    def __init__(self, train_dataset, val_dataset, model, epochs, batch_size, save_path, lr=5e-5, 
-                optimizer=torch.optim.AdamW, checkpoint_freq=5, from_checkpoint=False,
-                config=None, args=None):
+    def __init__(self, train_dataset, val_dataset, model, epochs, 
+                batch_size, save_path, lr=5e-5, optimizer=torch.optim.AdamW, 
+                checkpoint_freq=5, from_checkpoint=False, config=None, args=None):
         self.train_dataset = train_dataset
         self.val_dataset = val_dataset
         self.model = model
@@ -27,15 +27,14 @@ class CustomPreTrainer(Trainer):
         self.args = args
     def __call__(self):
         device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
-        self.model.to(device) # and move our model over to the selected device
         optim = self.optimizer(self.model.parameters(), lr=self.lr) # optimizer
-        
         trainloader = torch.utils.data.DataLoader(self.train_dataset,   # type: ignore
                 batch_size=self.batch_size, shuffle=True)
         valloader = torch.utils.data.DataLoader(self.val_dataset,   # type: ignore
                         batch_size=self.batch_size*2, shuffle=True)
         if self.from_checkpoint:
             self.model, optim = self.load_from_checkpoint(self.model, optim)
+        self.model.to(device) # and move our model over to the selected device
         self.model.train() # activate training mode  
         for epoch in range(self.epochs):
             train_loop = tqdm(trainloader, leave=True)
@@ -124,3 +123,18 @@ class CustomPreTrainer(Trainer):
             json.dump(vars(self.config), f)
         with open(join(self.model_dir, 'log.json'), 'w') as f:
             json.dump(self.args, f)
+
+
+class Encoder(CustomPreTrainer):
+    def __init__(self, dataset, model, load_path, from_checkpoint=False, batch_size=128):
+        super().__init__(self, train_dataset=dataset, val_dataset=None, model=model,
+                        epochs=None, batch_size=batch_size, save_path=load_path,   
+                        from_checkpoint=from_checkpoint)
+        
+    def __call__(self):
+        device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+        if self.from_checkpoint:
+            self.model, _ = self.load_from_checkpoint(self.model, self.optimizer)
+        self.model.to(device) # and move our model over to the selected device
+        self.model.eval()
+        
