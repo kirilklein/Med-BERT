@@ -29,7 +29,8 @@ def main(
 
     data = torch.load(data_file)
     if isinstance(max_num_seg, type(None)):
-        max_num_seg = int(np.max([max(segs) for segs in data['segments']]))
+        max_num_seg = int(np.max([max(segs) for segs in data['segments']])) + 1 # +1 for padding
+
     data = pd.DataFrame(data) 
     vocab = torch.load(vocab_file)
     with open(config_file) as f:
@@ -42,6 +43,7 @@ def main(
         print(f"Load saved model from {load_path}")
         model = torch.load(load_path)
     config.vocab_size = len(vocab)
+    config.pad_token_id = vocab['PAD']
     config.seg_vocab_size = max_num_seg
     typer.echo(f"Config: {vars(config)}")
 

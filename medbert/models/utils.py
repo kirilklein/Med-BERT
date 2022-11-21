@@ -149,8 +149,6 @@ class Encoder(CustomPreTrainer):
             self.model = self.load_from_checkpoint(self.model, None)
         self.model.to(device) # type: ignore # and move our model over to the selected device
         self.model.eval()  # type: ignore
-        print(self.train_dataset[0])
-        print(type(self.train_dataset[0]))
         loader = torch.utils.data.DataLoader(self.train_dataset,  # type: ignore
                                     batch_size=self.batch_size, shuffle=False)  
         loop = tqdm(loader, leave=True)                        
@@ -163,8 +161,13 @@ class Encoder(CustomPreTrainer):
             outputs = self.model(inputs_embeds=embedding_output,   # type: ignore
                         attention_mask=batch['attention_mask'],  
                         labels=batch['labels'],
-                        next_sentence_label=batch['plos'])                
+                        next_sentence_label=batch['plos'], 
+                        output_hidden_states=True) # type: ignore                
             loop.set_description(f"Inference")
-            print(len(outputs.last_hidden_state))
-            print(outputs.last_hidden_state.shape)
+            print('len', len(outputs.hidden_states))
+            print(outputs.hidden_states[0].shape)
+            print(outputs.hidden_states[-1].shape)
+            break
+            # print(len(outputs[0]))
+            # print(outputs[0].shape)
                 

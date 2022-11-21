@@ -83,8 +83,6 @@ def main(
     max_num_seg : int = typer.Option(100, help="maximum number of segments in seq"),
     from_checkpoint : bool = typer.Option(False, help="Load model from checkpoint")
     ):
-    args = locals()
-
     data = torch.load(data_file)
     if isinstance(max_num_seg, type(None)):
         max_num_seg = int(np.max([max(segs) for segs in data['segments']]))
@@ -93,7 +91,6 @@ def main(
         vocab_file = join(split(split(data_file)[0])[0], 'vocab', split(data_file)[1])
     vocab = torch.load(vocab_file)
     dataset = MLM_PLOS_Dataset(data, vocab, max_len) 
-    
     encoder = Encoder(dataset, model_path, from_checkpoint=from_checkpoint, 
                 batch_size=batch_size)
     encoder()
