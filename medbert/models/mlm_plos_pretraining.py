@@ -1,5 +1,5 @@
 from transformers import BertForPreTraining, BertConfig
-from medbert.dataloader.mlm_plos_loader import MLM_PLOS_Loader
+from medbert.features.mlm_plos_dataset import MLM_PLOS_Dataset
 from medbert.models import utils
 import torch
 import typer
@@ -45,7 +45,7 @@ def main(
     config.seg_vocab_size = max_num_seg
     typer.echo(f"Config: {vars(config)}")
 
-    dataset = MLM_PLOS_Loader(data, vocab, max_len)
+    dataset = MLM_PLOS_Dataset(data, vocab, max_len)
     print(f"Use {config.validation_size*100}% of data for validation")
     train_dataset, val_dataset = random_split(dataset, 
                     [1-config.validation_size, config.validation_size],

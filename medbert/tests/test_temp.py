@@ -4,7 +4,7 @@ import torch
 import numpy as np
 # from transformers import BertConfig
 #import matplotlib.pyplot as plt
-from medbert.dataloader.mlm_plos_loader import MLM_PLOS_Loader
+from medbert.features.mlm_plos_dataset import MLM_PLOS_Dataset
 from torch.utils.data import random_split
 import pandas as pd
 #%%
@@ -30,7 +30,7 @@ train_size = int(0.7 * len(data))
 
 test_size = len(data) - train_size
 #split data into train and test using torch.utils.data.random_split
-dataset = MLM_PLOS_Loader(data, vocab)
+dataset = MLM_PLOS_Dataset(data, vocab)
 
 train_dataset, test_dataset = random_split(dataset, [.5, .5])
 #%%

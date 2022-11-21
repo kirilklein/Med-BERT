@@ -1,5 +1,5 @@
 from transformers import Trainer, BertConfig, BertForPreTraining
-from medbert.dataloader.embeddings import BertEmbeddings
+from medbert.features.embeddings import BertEmbeddings
 from medbert.common import common, pytorch
 import torch
 from tqdm import tqdm
@@ -130,12 +130,13 @@ class CustomPreTrainer(Trainer):
 
 class Encoder(CustomPreTrainer):
     def __init__(self, dataset, load_path, from_checkpoint=False, batch_size=128):
-        super().__init__(self, train_dataset=dataset, val_dataset=None, model=None,
-                        epochs=None, batch_size=batch_size, save_path=load_path,   
-                        from_checkpoint=from_checkpoint)
+        self.model_dir = split(load_path)[0]
         with open(join(self.model_dir, 'config.json'), 'r') as f:
             config_dic = json.load(f)
         self.config = BertConfig(**config_dic)
+        super().__init__(train_dataset=dataset, val_dataset=None, model=None,
+                        epochs=None, batch_size=batch_size, save_path=load_path,   
+                        from_checkpoint=from_checkpoint, config=self.config)
         if not from_checkpoint:
             print(f"Load saved model from {load_path}")
             self.model = torch.load(load_path)

@@ -1,4 +1,4 @@
-from medbert.dataloader.MLM import MLMLoader
+from medbert.features.mlm_plos_dataset import MLM_PLOS_Dataset
 from os.path import join
 import torch
 
@@ -7,7 +7,9 @@ data_file = join(sim_data, "example_data_tokenized.pt")
 vocab_file = join(sim_data, "example_data_vocab.pt")
 data = torch.load(data_file)
 vocab = torch.load(vocab_file)
-loader = MLMLoader(data, vocab, max_len=100)
+dataset = MLM_PLOS_Dataset(data, vocab, max_len=100)
+loader = torch.utils.data.DataLoader(train_dataset,   # type: ignore
+                batch_size=64, shuffle=True)
 print("Length of dataset ", len(loader))
 for i, b in enumerate(loader):
     if i==1:

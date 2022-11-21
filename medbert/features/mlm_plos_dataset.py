@@ -1,10 +1,10 @@
 from torch.utils.data.dataset import Dataset
 import numpy as np
-from medbert.dataloader.utils import random_mask, seq_padding
+from medbert.features.utils import random_mask, seq_padding
 import torch
 
 
-class MLM_PLOS_Loader(Dataset):
+class MLM_PLOS_Dataset(Dataset):
     def __init__(self, data, vocab, max_len=None):
         self.vocab = vocab
         self.codes_all = data['codes']

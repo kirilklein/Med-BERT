@@ -6,8 +6,8 @@ import numpy as np
 import pandas as pd
 import json
 import torch
-from medbert.dataloader.embeddings import BertEmbeddings
-from medbert.dataloader.mlm_plos_loader import MLM_PLOS_Loader
+from medbert.features.embeddings import BertEmbeddings
+from medbert.features.mlm_plos_dataset import MLM_PLOS_Dataset
 from medbert.models.utils import Encoder
 from medbert.common import pytorch
 
@@ -22,7 +22,7 @@ class Encoding():
         self.from_checkpoint = from_checkpoint
         self.model = self.get_model()
         self.data = pd.DataFrame(torch.load(tokenized_data_path))
-        self.input_dataset = MLM_PLOS_Loader(self.data, self.vocab, self.config.max_length)
+        self.input_dataset = MLM_PLOS_Dataset(self.data, self.vocab, self.config.max_length)
         self.input_loader = torch.utils.data.DataLoader(self.input_dataset,   # type: ignore
                                                 batch_size=64, shuffle=False)
 
@@ -92,7 +92,8 @@ def main(
     if isinstance(vocab_file, type(None)):
         vocab_file = join(split(split(data_file)[0])[0], 'vocab', split(data_file)[1])
     vocab = torch.load(vocab_file)
-    dataset = MLM_PLOS_Loader(data, vocab, max_len) 
+    dataset = MLM_PLOS_Dataset(data, vocab, max_len) 
+    
     encoder = Encoder(dataset, model_path, from_checkpoint=from_checkpoint, 
                 batch_size=batch_size)
     encoder()

@@ -1,6 +1,6 @@
 from os.path import join, split
 import pickle as pkl
-from medbert.dataloader import tokenizer  
+from medbert.features import tokenizer  
 import typer
 import torch
 
