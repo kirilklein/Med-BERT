@@ -47,6 +47,7 @@ def main(
 
     dataset = MLM_PLOS_Dataset(data, vocab, max_len)
     print(f"Use {config.validation_size*100}% of data for validation")
+    print(dataset)
     train_dataset, val_dataset = random_split(dataset, 
                     [1-config.validation_size, config.validation_size],
                     generator=torch.Generator().manual_seed(42))

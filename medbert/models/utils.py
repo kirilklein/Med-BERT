@@ -149,6 +149,8 @@ class Encoder(CustomPreTrainer):
             self.model = self.load_from_checkpoint(self.model, None)
         self.model.to(device) # type: ignore # and move our model over to the selected device
         self.model.eval()  # type: ignore
+        print(self.train_dataset[0])
+        print(type(self.train_dataset[0]))
         loader = torch.utils.data.DataLoader(self.train_dataset,  # type: ignore
                                     batch_size=self.batch_size, shuffle=False)  
         loop = tqdm(loader, leave=True)                        

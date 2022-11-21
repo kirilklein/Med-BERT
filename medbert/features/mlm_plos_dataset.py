@@ -34,7 +34,7 @@ class MLM_PLOS_Dataset(Dataset):
         pad_labels = seq_padding(labels, self.max_len, self.vocab)
         output_dic = {
             'codes':torch.LongTensor(pad_codes),
-            'segments':torch.Tensor(pad_segments),
+            'segments':torch.LongTensor(pad_segments),
             'attention_mask':torch.LongTensor(mask),
             'labels':torch.LongTensor(pad_labels),
             'plos':torch.LongTensor([plos])}
