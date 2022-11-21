@@ -1,8 +1,8 @@
 from MED-BERT directory run:
 windwos:
-python medbert\dataloader\tokenizer.py data\raw\simulated\example_data.pkl 
+python medbert\features\tokenizer.py data\raw\simulated\example_data.pkl 
 linux:
-python medbert/dataloader/tokenizer.py data/raw/simulated/example_data.pkl 
+python medbert/features/tokenizer.py data/raw/simulated/example_data.pkl 
 windows:
 python medbert\models\mlm_plos_pretraining.py data\tokenized\example_data_tokenized.pt data\tokenized\example_data_vocab.pt models\mlm_pretrained\test.py 1
 linux:
