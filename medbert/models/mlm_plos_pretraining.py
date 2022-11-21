@@ -16,7 +16,7 @@ def main(
     model_dir : str = typer.Argument(..., help="Directory to save model"),
     epochs : int = typer.Argument(..., help="Number of epochs"),
     batch_size : int = typer.Option(32, help="Batch size"),
-    load_path : str = typer.Option(None, help=".pt containing the model"),
+    load_model : bool = typer.Option(False, help="Load saved model"),
     max_len : int = typer.Option(None, help="maximum number of tokens in seq"),
     max_num_seg : int = typer.Option(100, help="maximum number of segments in seq"),
     config_file : str = typer.Option(join('configs','pretrain_config.json'), 
@@ -36,12 +36,12 @@ def main(
     with open(config_file) as f:
             config_dic = json.load(f)
     config = BertConfig(vocab_size=len(vocab), **config_dic)
-    if isinstance(load_path, type(None)):
+    if not load_model:
         print("Initialize new model")
         model = BertForPreTraining(config)
     else:
-        print(f"Load saved model from {load_path}")
-        model = torch.load(load_path)
+        print(f"Load saved model from {model_dir}")
+        model = torch.load(join(model_dir, 'model.pt'))
     config.vocab_size = len(vocab)
     config.pad_token_id = vocab['PAD']
     config.seg_vocab_size = max_num_seg
@@ -49,7 +49,6 @@ def main(
 
     dataset = MLM_PLOS_Dataset(data, vocab, max_len)
     print(f"Use {config.validation_size*100}% of data for validation")
-    print(dataset)
     train_dataset, val_dataset = random_split(dataset, 
                     [1-config.validation_size, config.validation_size],
                     generator=torch.Generator().manual_seed(42))
