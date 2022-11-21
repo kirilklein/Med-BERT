@@ -130,7 +130,8 @@ class CustomPreTrainer(Trainer):
 
 
 class Encoder(CustomPreTrainer):
-    def __init__(self, dataset, model_dir, from_checkpoint=False, batch_size=128):
+    def __init__(self, dataset, model_dir, from_checkpoint=False, batch_size=128,
+                pat_ids=None):
         self.model_dir = model_dir
         with open(join(self.model_dir, 'config.json'), 'r') as f:
             config_dic = json.load(f)
@@ -144,6 +145,7 @@ class Encoder(CustomPreTrainer):
         else:
             model = BertForPreTraining(self.config)
             self.model = self.load_from_checkpoint(model, None)
+        self.pat_ids = pat_ids
     def __call__(self):
         device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
         if self.from_checkpoint:
@@ -154,8 +156,12 @@ class Encoder(CustomPreTrainer):
                                     batch_size=self.batch_size, shuffle=False)  
         loop = tqdm(loader, leave=True)                        
         pat_vecs = []
-        pat_ids = []
+        pat_ids_ls = []
+        k = 0
         for batch in loop:
+            k += len(batch)
+            items = dir(batch.__getitem__)
+            print(items)
             # put all tensore batches required for training
             batch = pytorch.batch_to_device(batch, device)
             # get embeddings
@@ -167,16 +173,21 @@ class Encoder(CustomPreTrainer):
                         next_sentence_label=batch['plos'], 
                         output_hidden_states=True) # type: ignore                
             loop.set_description(f"Inference")
-            for hidden_state in outputs.hidden_states[-1]:
-                pat_vec = hidden_state[hidden_state!=0].mean(dim=1)
+            
+            for i, hidden_state in enumerate(outputs.hidden_states[-1]):
+                itemindex = np.where(np.array(batch['codes'][i]) == 0)
+                length = itemindex[0][0]
+                print(length)
+                pat_vec = hidden_state[:length,:].mean(dim=0)
                 pat_vecs.append(pat_vec)
-                pat_ids = pat_ids + batch['pat_id']
+                print(batch.keys())
+                
             # print('len', len(outputs.hidden_states))
             # print(outputs.hidden_states[0].shape)
             # print(outputs.hidden_states[-1].shape)
             # break
             # print(len(outputs[0]))
             # print(outputs[0].shape)
-        pat_vecs = np.concatenate(pat_vecs, axis=0)
+        pat_vecs = np.stack(pat_vecs, axis=0)
         print(len(pat_ids), pat_vecs.shape)
         return pat_ids, pat_vecs

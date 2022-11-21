@@ -87,12 +87,13 @@ def main(
     if isinstance(max_num_seg, type(None)):
         max_num_seg = int(np.max([max(segs) for segs in data['segments']]))
     data = pd.DataFrame(data) 
+    pat_ids = data['pat_id']
     if isinstance(vocab_file, type(None)):
         vocab_file = join(split(split(data_file)[0])[0], 'vocab', split(data_file)[1])
     vocab = torch.load(vocab_file)
     dataset = MLM_PLOS_Dataset(data, vocab, max_len) 
     encoder = Encoder(dataset, model_path, from_checkpoint=from_checkpoint, 
-                batch_size=batch_size)
+                batch_size=batch_size, pat_ids=pat_ids)
     encoder()
     
 if __name__=='__main__':
