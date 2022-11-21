@@ -9,7 +9,7 @@ import json
 
 class CustomPreTrainer(Trainer):
     def __init__(self, train_dataset, val_dataset, model, epochs, 
-                batch_size, save_path, lr=5e-5, optimizer=torch.optim.AdamW, 
+                batch_size, model_dir, lr=5e-5, optimizer=torch.optim.AdamW, 
                 checkpoint_freq=5, from_checkpoint=False, config=None, args=None):
         self.train_dataset = train_dataset
         self.val_dataset = val_dataset
@@ -18,8 +18,7 @@ class CustomPreTrainer(Trainer):
         self.batch_size = batch_size
         self.lr = lr
         self.optimizer = optimizer
-        self.save_path = save_path
-        self.model_dir = split(save_path)[0]
+        self.model_dir = model_dir
         self.checkpoint_freq = checkpoint_freq
         self.from_checkpoint = from_checkpoint
         self.config = config
@@ -120,8 +119,8 @@ class CustomPreTrainer(Trainer):
     
     def save_model(self):
         common.create_directory(self.model_dir)
-        torch.save(self.model, self.save_path)
-        print(f"Trained model saved to {self.save_path}")
+        torch.save(self.model, join(self.model_dir, "model.pt"))
+        print(f"Trained model saved to {self.model_dir}")
         with open(join(self.model_dir, 'config.json'), 'w') as f:
             json.dump(vars(self.config), f)
         with open(join(self.model_dir, 'log.json'), 'w') as f:
@@ -129,13 +128,13 @@ class CustomPreTrainer(Trainer):
 
 
 class Encoder(CustomPreTrainer):
-    def __init__(self, dataset, load_path, from_checkpoint=False, batch_size=128):
-        self.model_dir = split(load_path)[0]
+    def __init__(self, dataset, model_dir, from_checkpoint=False, batch_size=128):
+        self.model_dir = model_dir
         with open(join(self.model_dir, 'config.json'), 'r') as f:
             config_dic = json.load(f)
         self.config = BertConfig(**config_dic)
         super().__init__(train_dataset=dataset, val_dataset=None, model=None,
-                        epochs=None, batch_size=batch_size, save_path=load_path,   
+                        epochs=None, batch_size=batch_size, model_dir=model_dir,   
                         from_checkpoint=from_checkpoint, config=self.config)
         if not from_checkpoint:
             print(f"Load saved model from {load_path}")

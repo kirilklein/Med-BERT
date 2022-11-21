@@ -13,7 +13,7 @@ import numpy as np
 def main(
     data_file : str = typer.Argument(..., help="Tokenized data"),
     vocab_file : str = typer.Argument(..., help=".pt vocab dic"),
-    save_path : str = typer.Argument(..., help="Path to save model"),
+    model_dir : str = typer.Argument(..., help="Directory to save model"),
     epochs : int = typer.Argument(..., help="Number of epochs"),
     batch_size : int = typer.Option(32, help="Batch size"),
     load_path : str = typer.Option(None, help=".pt containing the model"),
@@ -55,7 +55,7 @@ def main(
                     generator=torch.Generator().manual_seed(42))
     
     trainer = utils.CustomPreTrainer(train_dataset, val_dataset, model, epochs, 
-                batch_size, save_path, checkpoint_freq=checkpoint_freq, 
+                batch_size, model_dir, checkpoint_freq=checkpoint_freq, 
                 from_checkpoint=from_checkpoint, config=config, args=args)
     trainer()
     trainer.save_model()
