@@ -1,4 +1,4 @@
-from transformers import Trainer
+from transformers import Trainer, BertConfig, BertForPreTraining
 from medbert.dataloader.embeddings import BertEmbeddings
 from medbert.common import common, pytorch
 import torch
@@ -112,8 +112,11 @@ class CustomPreTrainer(Trainer):
         checkpoint_path = join(self.model_dir, "checkpoint.pt")
         checkpoint = torch.load(checkpoint_path)
         model.load_state_dict(checkpoint['model_state_dict'])
-        optim.load_state_dict(checkpoint['optimizer_state_dict'])
-        return model, optim
+        if not isinstance(optim, type(None)):
+            optim.load_state_dict(checkpoint['optimizer_state_dict'])
+            return model, optim
+        else:
+            return model
     
     def save_model(self):
         common.create_directory(self.model_dir)
@@ -126,15 +129,39 @@ class CustomPreTrainer(Trainer):
 
 
 class Encoder(CustomPreTrainer):
-    def __init__(self, dataset, model, load_path, from_checkpoint=False, batch_size=128):
-        super().__init__(self, train_dataset=dataset, val_dataset=None, model=model,
+    def __init__(self, dataset, load_path, from_checkpoint=False, batch_size=128):
+        super().__init__(self, train_dataset=dataset, val_dataset=None, model=None,
                         epochs=None, batch_size=batch_size, save_path=load_path,   
                         from_checkpoint=from_checkpoint)
-        
+        with open(join(self.model_dir, 'config.json'), 'r') as f:
+            config_dic = json.load(f)
+        self.config = BertConfig(**config_dic)
+        if not from_checkpoint:
+            print(f"Load saved model from {load_path}")
+            self.model = torch.load(load_path)
+        else:
+            model = BertForPreTraining(self.config)
+            self.model = self.load_from_checkpoint(model, None)
     def __call__(self):
         device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
         if self.from_checkpoint:
-            self.model, _ = self.load_from_checkpoint(self.model, self.optimizer)
-        self.model.to(device) # and move our model over to the selected device
-        self.model.eval()
-        
+            self.model = self.load_from_checkpoint(self.model, None)
+        self.model.to(device) # type: ignore # and move our model over to the selected device
+        self.model.eval()  # type: ignore
+        loader = torch.utils.data.DataLoader(self.train_dataset,  # type: ignore
+                                    batch_size=self.batch_size, shuffle=False)  
+        loop = tqdm(loader, leave=True)                        
+        for batch in loop:
+            # put all tensore batches required for training
+            batch = pytorch.batch_to_device(batch, device)
+            # get embeddings
+            embedding_output = self.embeddings(batch['codes'], batch['segments'])
+            # process
+            outputs = self.model(inputs_embeds=embedding_output,   # type: ignore
+                        attention_mask=batch['attention_mask'],  
+                        labels=batch['labels'],
+                        next_sentence_label=batch['plos'])                
+            loop.set_description(f"Inference")
+            print(len(outputs.last_hidden_state))
+            print(outputs.last_hidden_state.shape)
+                
