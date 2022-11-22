@@ -47,7 +47,7 @@ class DataGenerator(super):
 
     def simulate_data(self):
         for pid in range(self.num_patients):
-            yield self.generate_ICD10_history(pid)
+            yield self.generate_ICD10_history('p_'+str(pid))
 
 def main(num_patients : int = typer.Argument(...), 
         save_name: str = typer.Argument(..., 
