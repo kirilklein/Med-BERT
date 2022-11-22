@@ -130,8 +130,8 @@ class CustomPreTrainer(Trainer):
 
 
 class Encoder(CustomPreTrainer):
-    def __init__(self, dataset, model_dir, from_checkpoint=False, batch_size=128,
-                pat_ids=None):
+    def __init__(self, dataset, model_dir, pat_ids,
+                from_checkpoint=False, batch_size=128):
         self.model_dir = model_dir
         with open(join(self.model_dir, 'config.json'), 'r') as f:
             config_dic = json.load(f)
@@ -146,6 +146,50 @@ class Encoder(CustomPreTrainer):
             model = BertForPreTraining(self.config)
             self.model = self.load_from_checkpoint(model, None)
         self.pat_ids = pat_ids
+    def __call__(self):
+        device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+        if self.from_checkpoint:
+            self.model = self.load_from_checkpoint(self.model, None)
+        self.model.to(device) # type: ignore # and move our model over to the selected device
+        self.model.eval()  # type: ignore
+        loader = torch.utils.data.DataLoader(self.train_dataset,  # type: ignore
+                                    batch_size=self.batch_size, shuffle=False)  
+        loop = tqdm(loader, leave=True)                        
+        pat_vecs = []
+        for batch in loop:
+            # put all tensore batches required for training
+            batch = pytorch.batch_to_device(batch, device)
+            # get embeddings
+            embedding_output = self.embeddings(batch['codes'], batch['segments'])
+            # process
+            outputs = self.model(inputs_embeds=embedding_output,   # type: ignore
+                        attention_mask=batch['attention_mask'],  
+                        labels=batch['labels'],
+                        next_sentence_label=batch['plos'], 
+                        output_hidden_states=True) # type: ignore                
+            loop.set_description(f"Inference")
+            
+            for i, hidden_state in enumerate(outputs.hidden_states[-1]):
+                itemindex = np.where(np.array(batch['codes'][i]) == 0)
+                if len(itemindex[0]) > 0:
+                    length = itemindex[0][0] # take only non-padded tokens
+                    pat_vec = hidden_state[:length,:].mean(dim=0).detach().numpy()
+                    pat_vecs.append(pat_vec)
+                else:
+                    pat_vec = hidden_state.mean(dim=0).detach().numpy()
+                    pat_vecs.append(pat_vec)
+        pat_vecs = np.stack(pat_vecs, axis=0)
+        assert len(pat_vecs) == len(self.pat_ids)  # type: ignore
+        if not os.path.exists(join(self.model_dir, 'encodings')):
+            os.makedirs(join(self.model_dir, 'encodings'))
+        np.savez(join(self.model_dir, 'encodings', 'encodings.npz'), 
+                **{'pat_ids':self.pat_ids, 'pat_vecs':pat_vecs})
+        return self.pat_ids, pat_vecs
+
+class Attention(Encoder):
+    def __init__(self, dataset, model_dir, pat_ids, 
+                from_checkpoint=False, batch_size=128):
+        super().__init__(dataset, model_dir, pat_ids, from_checkpoint, batch_size)
     def __call__(self):
         device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
         if self.from_checkpoint:

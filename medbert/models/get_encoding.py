@@ -26,8 +26,8 @@ def main(
         vocab_file = join(split(split(data_file)[0])[0], 'vocab', split(data_file)[1])
     vocab = torch.load(vocab_file)
     dataset = MLM_PLOS_Dataset(data, vocab, max_len) 
-    encoder = Encoder(dataset, model_path, from_checkpoint=from_checkpoint, 
-                batch_size=batch_size, pat_ids=pat_ids)
+    encoder = Encoder(dataset, model_path, pat_ids, from_checkpoint=from_checkpoint, 
+                batch_size=batch_size)
     encoder()
     
 if __name__=='__main__':
