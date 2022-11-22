@@ -43,3 +43,21 @@ class MLM_PLOS_Dataset(Dataset):
     def __len__(self):
         return len(self.codes_all)
 
+class PatientDatum():
+    def __init__(self, data, vocab, pat_id):
+        self.vocab = vocab
+        self.codes = data['codes'][pat_id]
+        self.segments = data['segments'][pat_id]
+
+    def __getitem__(self, index):
+        """
+        return: code, position, segmentation, mask, label
+        """
+        output_dic = {
+            'codes':torch.LongTensor(self.codes),
+            'segments':torch.LongTensor(self.segments),}
+        return output_dic
+
+    def __len__(self):
+        return 1
+
