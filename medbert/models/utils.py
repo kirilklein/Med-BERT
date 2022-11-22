@@ -183,5 +183,5 @@ class Encoder(CustomPreTrainer):
         if not os.path.exists(join(self.model_dir, 'encodings')):
             os.makedirs(join(self.model_dir, 'encodings'))
         np.savez(join(self.model_dir, 'encodings', 'encodings.npz'), 
-                self.pat_ids, pat_vecs, kwds=['pat_ids', 'pat_vecs'])
+                **{'pat_ids':self.pat_ids, 'pat_vecs':pat_vecs})
         return self.pat_ids, pat_vecs
