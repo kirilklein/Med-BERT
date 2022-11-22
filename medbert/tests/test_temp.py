@@ -4,7 +4,7 @@ import torch
 import numpy as np
 # from transformers import BertConfig
 #import matplotlib.pyplot as plt
-from medbert.features.mlm_plos_dataset import MLM_PLOS_Dataset
+from medbert.features.dataset import MLM_PLOS_Dataset
 from torch.utils.data import random_split
 import pandas as pd
 #%%

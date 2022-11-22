@@ -1,5 +1,5 @@
 from transformers import BertForPreTraining, BertConfig
-from medbert.features.mlm_plos_dataset import MLM_PLOS_Dataset
+from medbert.features.dataset import MLM_PLOS_Dataset
 from medbert.models import utils
 import torch
 import typer

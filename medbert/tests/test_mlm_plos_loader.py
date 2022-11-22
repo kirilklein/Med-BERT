@@ -1,4 +1,4 @@
-from medbert.features.mlm_plos_dataset import MLM_PLOS_Dataset
+from medbert.features.dataset import MLM_PLOS_Dataset
 from os.path import join
 import torch
 
