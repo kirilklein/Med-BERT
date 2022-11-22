@@ -87,7 +87,7 @@ def main(
     if isinstance(max_num_seg, type(None)):
         max_num_seg = int(np.max([max(segs) for segs in data['segments']]))
     data = pd.DataFrame(data) 
-    pat_ids = data['pat_id']
+    pat_ids = data['pats']
     if isinstance(vocab_file, type(None)):
         vocab_file = join(split(split(data_file)[0])[0], 'vocab', split(data_file)[1])
     vocab = torch.load(vocab_file)

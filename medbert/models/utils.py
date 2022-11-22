@@ -156,12 +156,7 @@ class Encoder(CustomPreTrainer):
                                     batch_size=self.batch_size, shuffle=False)  
         loop = tqdm(loader, leave=True)                        
         pat_vecs = []
-        pat_ids_ls = []
-        k = 0
         for batch in loop:
-            k += len(batch)
-            items = dir(batch.__getitem__)
-            print(items)
             # put all tensore batches required for training
             batch = pytorch.batch_to_device(batch, device)
             # get embeddings
@@ -176,18 +171,17 @@ class Encoder(CustomPreTrainer):
             
             for i, hidden_state in enumerate(outputs.hidden_states[-1]):
                 itemindex = np.where(np.array(batch['codes'][i]) == 0)
-                length = itemindex[0][0]
-                print(length)
-                pat_vec = hidden_state[:length,:].mean(dim=0)
-                pat_vecs.append(pat_vec)
-                print(batch.keys())
-                
-            # print('len', len(outputs.hidden_states))
-            # print(outputs.hidden_states[0].shape)
-            # print(outputs.hidden_states[-1].shape)
-            # break
-            # print(len(outputs[0]))
-            # print(outputs[0].shape)
+                if len(itemindex[0]) > 0:
+                    length = itemindex[0][0] # take only non-padded tokens
+                    pat_vec = hidden_state[:length,:].mean(dim=0).detach().numpy()
+                    pat_vecs.append(pat_vec)
+                else:
+                    pat_vec = hidden_state.mean(dim=0).detach().numpy()
+                    pat_vecs.append(pat_vec)
         pat_vecs = np.stack(pat_vecs, axis=0)
-        print(len(pat_ids), pat_vecs.shape)
-        return pat_ids, pat_vecs
+        assert len(pat_vecs) == len(self.pat_ids)  # type: ignore
+        if not os.path.exists(join(self.model_dir, 'encodings')):
+            os.makedirs(join(self.model_dir, 'encodings'))
+        np.savez(join(self.model_dir, 'encodings', 'encodings.npz'), 
+                self.pat_ids, pat_vecs, kwds=['pat_ids', 'pat_vecs'])
+        return self.pat_ids, pat_vecs

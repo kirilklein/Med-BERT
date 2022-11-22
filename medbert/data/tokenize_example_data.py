@@ -7,7 +7,7 @@ import torch
 
 def main(
     input_data_path: str = typer.Argument(..., 
-        help="pickle list in the form [[pid1, los1, codes1, visit_nums1], ...]"),
+        help="pickle list in the form [[pid1, los1, codes1, segment1], ...]"),
     vocab_save_path: str = typer.Option(
         None, help="Path to save vocab, must end with .pt"),
     out_data_path: str = typer.Option(
