@@ -7,7 +7,7 @@ from bertviz import model_view, head_view
 
 
 class BertViz:
-    def __init__(self, model_dir, data_path, vocab_path=None, max_len=100):
+    def __init__(self, model_dir, data_path, vocab_path=None):
         self.model = torch.load(model_dir)
         self.model.eval()
         self.data = torch.load(data_path)
