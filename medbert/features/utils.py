@@ -2,7 +2,7 @@ import random
 import numpy as np
 
 
-
+#TODO dont mask cls and sep tokens
 def random_mask(codes, vocab):
     """One code is masked per patient"""
     masked_codes = codes
