@@ -33,13 +33,11 @@ class EHRTokenizer():
         return [self.vocabulary.get(code, self.vocabulary['[UNK]']) for code in seq]
 
     def batch_encode(self, features):
-        tokenized_data_dic = {'pats': [], 'los': [], 'concept': [], 'segment': [], 'attention_mask': []}
+        tokenized_data_dic = {'los': [], 'concept': [], 'segment': [], 'attention_mask': []}
         concepts = [seq[2] for seq in features] # icd codes
         pad_len = max([len(concept_seq) for concept_seq in concepts])   
         if pad_len > self.config.truncation:
             pad_len = self.config.truncation
-        target_seqs = []
-        out_visit_seqs = []
         for patient in tqdm(features, desc="Tokenizing", total=len(concepts)):
             # truncation
             concept_seq = patient[2]
@@ -49,21 +47,19 @@ class EHRTokenizer():
                 visit_seq = visit_seq[:self.config.truncation]
             
             # Tokenizing
-            tokenized_concept_seq = self.encode(concept_seq)
+            target_seq = self.encode(concept_seq)
             attention_mask = [1] * len(concept_seq)
             # Pad tokenized code seq
             if self.config.padding:
-                tokenized_concept_seq = self.pad(tokenized_concept_seq, pad_len)
+                target_seq = self.pad(target_seq, pad_len)
                 visit_seq = self.pad(visit_seq, pad_len, pad_token=0)
                 attention_mask = self.pad(attention_mask, pad_len, pad_token=0)
 
-            target_seqs.append(tokenized_concept_seq)
-            out_visit_seqs.append(visit_seq)
-            tokenized_data_dic['concept'].append(target_seqs) 
-            tokenized_data_dic['segment'].append(out_visit_seqs)
+            tokenized_data_dic['concept'].append(target_seq) 
+            tokenized_data_dic['segment'].append(visit_seq)
             tokenized_data_dic['attention_mask'].append(attention_mask)
 
-        tokenized_data_dic['pats'] = [seq[0] for seq in features]
+        # tokenized_data_dic['pats'] = [seq[0] for seq in features] # don't need patient id
         tokenized_data_dic['los'] = [seq[1] for seq in features]
         return tokenized_data_dic
     
