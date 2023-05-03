@@ -1,5 +1,5 @@
 import numpy as np
-import pickle as pkl
+import torch
 import string 
 import typer
 
@@ -62,8 +62,9 @@ def main(num_patients : int = typer.Argument(...),
     generator = DataGenerator(num_patients, min_num_visits, max_num_visits, 
         min_num_codes_per_visit, max_num_codes_per_visit, 
         min_los, max_los, num_codes)
-    with open(save_name, 'wb') as f:
-        pkl.dump([hist for hist in generator.simulate_data()], f)
+        
+    torch.save([hist for hist in generator.simulate_data()], save_name)
+
 
 if __name__ == '__main__':
     typer.run(main)

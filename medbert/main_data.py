@@ -2,6 +2,7 @@ from hydra import initialize, compose
 from omegaconf import OmegaConf
 from data.utils import Splitter
 from features.tokenizer import EHRTokenizer
+from features.dataset import MLM_PLOS_Dataset
 import torch
 from os.path import join
 
@@ -11,7 +12,7 @@ def main():
         dataset_config = compose(config_name='dataset.yaml')
     
     # save configs in dataset_config.working_dir!
-    
+    data_dir = "../data/processed/synthetic"
     
     """
         Tokenize
@@ -29,14 +30,20 @@ def main():
     tokenizer.save_vocab(join(dataset_config.working_dir, 'vocabulary.pt'))
     encoded_test = tokenizer(test)
     encoded_val = tokenizer(val)
-    print(encoded_test['concepts'])
+    patient = {key: values[3] for key, values in encoded_train.items()}
+    print(patient)
+    print({key: len(values) for key, values in patient.items()})
+
     # To dataset
-    # train_dataset = MLMDataset(encoded_train, vocabulary=tokenizer.vocabulary)
+    train_dataset = MLM_PLOS_Dataset(encoded_train, vocabulary=tokenizer.vocabulary, **dataset_config)
     # test_dataset = MLMDataset(encoded_test, vocabulary=tokenizer.vocabulary)
     # val_dataset = MLMDataset(encoded_val, vocabulary=tokenizer.vocabulary)
-    # torch.save(train_dataset, 'dataset.train')
-    # torch.save(test_dataset, 'dataset.test')
-    # torch.save(val_dataset, 'dataset.val')
+    torch.save(train_dataset, join(data_dir, 'dataset.train'))
+    patient = train_dataset.__getitem__(2)
+    print({key: len(values) for key, values in patient.items()})
+    print(patient)
+    # torch.save(test_dataset, join(data_dir, 'dataset.test'))
+    # torch.save(val_dataset,  join(data_dir, 'dataset.val'))
     
     OmegaConf.save(config=tokenizer_config, f=join(dataset_config.working_dir, 'tokenizer.yaml'))
     OmegaConf.save(config=dataset_config, f=join(dataset_config.working_dir, 'dataset.yaml'))
