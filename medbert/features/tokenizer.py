@@ -33,7 +33,7 @@ class EHRTokenizer():
         return [self.vocabulary.get(code, self.vocabulary['[UNK]']) for code in seq]
 
     def batch_encode(self, features):
-        tokenized_data_dic = {'pats': [], 'los': [], 'concepts': [], 'segments': [], 'attention_mask': []}
+        tokenized_data_dic = {'pats': [], 'los': [], 'concept': [], 'segment': [], 'attention_mask': []}
         concepts = [seq[2] for seq in features] # icd codes
         pad_len = max([len(concept_seq) for concept_seq in concepts])   
         if pad_len > self.config.truncation:
@@ -59,8 +59,8 @@ class EHRTokenizer():
 
             target_seqs.append(tokenized_concept_seq)
             out_visit_seqs.append(visit_seq)
-            tokenized_data_dic['concepts'].append(target_seqs) 
-            tokenized_data_dic['segments'].append(out_visit_seqs)
+            tokenized_data_dic['concept'].append(target_seqs) 
+            tokenized_data_dic['segment'].append(out_visit_seqs)
             tokenized_data_dic['attention_mask'].append(attention_mask)
 
         tokenized_data_dic['pats'] = [seq[0] for seq in features]
