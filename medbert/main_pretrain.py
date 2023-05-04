@@ -7,10 +7,6 @@ from trainer.trainer import EHRTrainer
 from transformers import BertForPreTraining
 from transformers import BertConfig
 
-from evaluation import metrics
-
-
-
 def main():
     with initialize(config_path='../configs'):
         cfg: dict = compose(config_name='trainer.yaml')
@@ -34,19 +30,13 @@ def main():
         eps=opt.get('epsilon', 1e-8),
     )
     
-    # Instantiate metrics
-    if 'metrics' in cfg:
-        metrics = {k: instantiate(v) for k, v in cfg.metrics.items()}
-    else:
-        metrics = None
-    
     trainer = EHRTrainer( 
         model=model, 
         optimizer=optimizer,
         train_dataset=train_dataset, 
         val_dataset=val_dataset, 
         args=cfg.get('trainer_args', {}),
-        metrics=metrics,
+        cfg=cfg,
     )
     trainer.train()
 

@@ -6,7 +6,7 @@ import uuid
 import json
 # from dataloader.collate_fn import dynamic_padding
 from hydra.utils import instantiate
-from omegaconf import DictConfig
+from omegaconf import DictConfig, OmegaConf
 from evaluation.metrics import PrecisionAtK # instantiate with hydra
 
 class EHRTrainer():
@@ -21,7 +21,6 @@ class EHRTrainer():
         cfg: DictConfig = None,
     ):
         self.device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
-
         self.model = model.to(self.device)
         self.train_dataset = train_dataset
         self.test_dataset = test_dataset
@@ -44,8 +43,7 @@ class EHRTrainer():
             'collate_fn': None
         }
         
-        self.args = {**default_args, **args}
-
+        self.args = OmegaConf.create({**default_args, **args})
     def update_attributes(self, **kwargs):
         for key, value in kwargs.items():
             if key == 'args':
@@ -170,11 +168,12 @@ class EHRTrainer():
         self.info(f'Run folder: {self.run_folder}')
 
     def save_setup(self):
-        config_name = os.path.join(self.run_folder, 'model_config.json')
-        with open(config_name, 'w') as f:
+        
+        OmegaConf.save(config=self.args, f=os.path.join(self.run_folder, 'config.yaml'))
+
+        with open(os.path.join(self.run_folder, 'model_config.json'), 'w') as f:
             json.dump({
                 'model_config': self.model.config.to_dict(),    # Maybe .to_diff_dict()?
-                'args': self.args
             }, f)
 
     def save_checkpoint(self, id, **kwargs):
