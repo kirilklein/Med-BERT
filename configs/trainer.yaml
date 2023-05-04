@@ -1,5 +1,5 @@
-train_dataset: 'dataset.train'
-val_dataset: 'dataset.val'
+train_dataset: '..\\data\\processed\\synthetic\\dataset.train'
+val_dataset: '..\\data\\processed\\synthetic\\dataset.val'
 
 model:
   max_position_embeddings: 512
@@ -22,22 +22,22 @@ trainer_args:
 
 metrics:
   top1:
-    _target_: evaluation.mlm.top_k
+    _target_: __main__.metrics.top_k
     _partial_: true
     topk: 1
   top10:
-    _target_: evaluation.mlm.top_k
+    _target_: __main__.metrics.top_k
     _partial_: true
     topk: 10
   top30:
-    _target_: evaluation.mlm.top_k
+    _target_: __main__.metrics.top_k
     _partial_: true
     topk: 30
   top50:
-    _target_: evaluation.mlm.top_k
+    _target_: __main__.metrics.top_k
     _partial_: true
     topk: 50
   top100:
-    _target_: evaluation.mlm.top_k
+    _target_: __main__.metrics.top_k
     _partial_: true
     topk: 100
