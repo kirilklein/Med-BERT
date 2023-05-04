@@ -7,10 +7,12 @@ from trainer.trainer import EHRTrainer
 from transformers import BertForPreTraining
 from transformers import BertConfig
 
+from evaluation import metrics
+
 
 
 def main():
-    with initialize(config_path='configs'):
+    with initialize(config_path='../configs'):
         cfg: dict = compose(config_name='trainer.yaml')
 
     train_dataset = torch.load(cfg.get('train_dataset', 'dataset.train'))
@@ -37,7 +39,7 @@ def main():
         metrics = {k: instantiate(v) for k, v in cfg.metrics.items()}
     else:
         metrics = None
-
+    
     trainer = EHRTrainer( 
         model=model, 
         optimizer=optimizer,
