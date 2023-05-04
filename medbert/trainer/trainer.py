@@ -6,7 +6,8 @@ import uuid
 import json
 # from dataloader.collate_fn import dynamic_padding
 from hydra.utils import instantiate
-
+from omegaconf import DictConfig
+from evaluation.metrics import PrecisionAtK # instantiate with hydra
 
 class EHRTrainer():
     def __init__(self, 
@@ -16,8 +17,8 @@ class EHRTrainer():
         val_dataset: Dataset = None,
         optimizer: torch.optim.Optimizer = None,
         scheduler: torch.optim.lr_scheduler.StepLR = None,
-        metrics: dict = {},
         args: dict = {},
+        cfg: DictConfig = None,
     ):
         self.device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
@@ -27,7 +28,12 @@ class EHRTrainer():
         self.val_dataset = val_dataset
         self.optimizer = optimizer
         self.scheduler = scheduler
-        self.metrics = {k: instantiate(v) for k, v in metrics.items()}
+        # Instantiate metrics
+        if 'metrics' in cfg:
+            self.metrics = {k: instantiate(v) for k, v in cfg.metrics.items()}
+        else:
+            self.metrics = None
+        
 
         default_args = {
             'batch_size': 32,
