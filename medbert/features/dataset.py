@@ -6,6 +6,7 @@ class BaseDataset(Dataset):
     def __init__(self, features: dict, **kwargs):
         self.features = features
         self.kwargs = kwargs
+        self.max_segments = self.get_max_segments() # required for type vocab size
 
     def __len__(self):
         return len(self.features['concept'])
@@ -20,6 +21,11 @@ class BaseDataset(Dataset):
             return vocabulary
         else:
             raise TypeError(f'Unsupported vocabulary input {type(vocabulary)}')
+    def get_max_segments(self):
+        if 'segment' not in self.features:
+            return None
+        return max([max(segment) for segment in self.features['segment']]) + 1    
+        
 
 class MLM_PLOS_Dataset(BaseDataset):
     def __init__(self, features: dict, ignore_special_tokens=True, **kwargs):
