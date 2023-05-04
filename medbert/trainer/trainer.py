@@ -118,7 +118,8 @@ class EHRTrainer():
                 'age': batch['age'] if 'age' in batch else None,
                 'abspos': batch['abspos'] if 'abspos' in batch else None
             },
-            labels=batch['target'] if 'target' in batch else None
+            labels=batch['target'] if 'target' in batch else None,
+            next_sentence_label=batch['plos'] if 'plos' in batch else None, # 
         )
 
     def backward_pass(self, loss):
