@@ -43,9 +43,15 @@ class EHRTokenizer():
             concept_seq = patient[2]
             visit_seq = patient[3]
             if len(concept_seq)>self.config.truncation:
-                concept_seq = concept_seq[:self.config.truncation]
-                visit_seq = visit_seq[:self.config.truncation]
-            
+                additional = 0
+                if self.config.cls_token:
+                    additional = 1
+                concept_seq = concept_seq[-self.config.truncation-additional:] # cut off oldest codes, -1 for [CLS]
+                visit_seq = visit_seq[-self.config.truncation-additional:]
+            if self.config.cls_token:
+                concept_seq.insert(0, self.vocabulary['[CLS]']) # add [CLS] token
+                visit_seq.insert(0, 0) # add [CLS] token
+                
             # Tokenizing
             target_seq = self.encode(concept_seq)
             attention_mask = [1] * len(concept_seq)
