@@ -1,0 +1,9 @@
+in_data: ..\data\features\synthetic.pt
+in_outcomes: ..\data\features\synthetic_outcomes.pt
+out_dir: ..\data\processed\finetune\synthetic
+split_ratios: 
+  train: 0.7
+  val: 0.2
+  test: 0.1
+masked_ratio: 0.15
+min_los: 3
