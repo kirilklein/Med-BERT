@@ -105,7 +105,7 @@ def main(num_patients : int = typer.Argument(...),
         min_los, max_los, num_codes)
     patients, outcomes = generator()
     torch.save(patients, save_name)
-    torch.save(outcomes, join(split(save_name)[0], 'outcomes.pt'))
+    torch.save(outcomes, join(split(save_name)[0], 'synthetic_outcomes.pt'))
 
 
 if __name__ == '__main__':
