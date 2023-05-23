@@ -33,14 +33,14 @@ class EHRTokenizer():
         return [self.vocabulary.get(concept, self.vocabulary['[UNK]']) for concept in concepts]
    
 
-    def batch_encode(self, features: dict, padding=True, truncation=512):
+    def batch_encode(self, features: dict):
         data = {key: [] for key in features}
         data['attention_mask'] = []
 
         for patient in tqdm(self._patient_iterator(features), desc="Encoding patients"):
             patient = self.insert_special_tokens(patient)                   # Insert SEP and CLS tokens
 
-            if truncation and len(patient['concept']) >  self.config.truncation:
+            if self.config.truncation and (len(patient['concept']) >  self.config.truncation):
                 patient = self.truncate(patient, max_len= self.config.truncation)        # Truncate patient to max_len
             
             # Created after truncation for efficiency
@@ -51,11 +51,11 @@ class EHRTokenizer():
             for key, value in patient.items():
                 data[key].append(value)
 
-        if padding:
+        if self.config.padding:
             longest_seq = max([len(s) for s in data['concept']])            # Find longest sequence
             data = self.pad(data, max_len=longest_seq)                      # Pad sequences to max_len
-        
-        return BatchEncoding(data, tensor_type='pt' if padding else None)
+        print({key: len(values) for key, values in data.items()})
+        return BatchEncoding(data, tensor_type='pt' if self.config.padding else None)
     
     def insert_special_tokens(self, patient: dict):
         if self.config['sep_tokens']:
