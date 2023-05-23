@@ -47,3 +47,42 @@ class Splitter():
         return outcomes_splits
     def save(self, dest: str):
         torch.save(self.splits, join(dest, 'splits.pt'))
+
+class Censor():
+    def __init__(self, censor_time: float = 0, )-> None:
+        """Abspos before outcome to censor"""
+        self.censor_time = censor_time
+
+    def __call__(self, features: dict, outcomes: list)-> dict:
+        return self.censor_features(features, outcomes)
+    
+    def censor_features(self, features: dict, outcomes: list)-> dict:
+        """
+        Censor features before outcome
+        """
+        censored_features = {}
+        censored_patients = []
+        for patient, pat_outcome in self._patient_iterator(features, outcomes):
+            censor_index = self._find_censor_index(patient, pat_outcome)
+            if censor_index == 0: # remove patients with no observations before censor_time
+                continue
+            censored_patient = {key: v[:censor_index] for key, v in patient.items()}
+            censored_patients.append(censored_patient)
+
+        censored_features = {key: [patient[key] for patient in censored_patients] for key in censored_patients[0]}
+        return censored_features
+        
+    def _find_censor_index(self, patient, pat_outcome):
+        """Censor index is the index of the last observation before the outcome - self.censor_time"""
+        censor_abspos = pat_outcome-self.censor_time
+        if censor_abspos < patient['abspos'][0]:
+            return 0
+        elif (torch.tensor(patient['abspos']) > censor_abspos).sum() == 0: # If no observations after censor time
+            return len(patient['abspos'])
+        else:
+            censor_index = (torch.tensor(patient['abspos']) <= censor_abspos).nonzero()[-1].item()
+            return censor_index
+    
+    def _patient_iterator(self, features: dict, outcomes: list)-> tuple:
+        for i in range(len(features['concept'])):
+            yield {key: values[i] for key, values in features.items()}, outcomes[i]
