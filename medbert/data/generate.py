@@ -23,8 +23,8 @@ class DataGenerator(super):
         self.min_los = min_los
         self.max_los = max_los
         self.num_codes = num_codes
-
-    def generate_ICD10_history(self, pid):
+        self.codes = self.generate_randomICD10_codes(self.num_codes)
+    def generate_ICD10_history(self):
         
         num_visits = np.random.randint(self.min_num_visits, self.max_num_visits)
         num_codes_per_visit_ls = np.random.randint(self.min_num_codes_per_visit, 
@@ -32,8 +32,8 @@ class DataGenerator(super):
             size=num_visits)
         los_nums = np.random.randint(self.min_los, self.max_los, size=num_visits)
         
-        codes = self.generate_randomICD10_codes(self.num_codes)
-        all_visit_codes = np.random.choice(codes, 
+        # codes = self.generate_randomICD10_codes(self.num_codes)
+        all_visit_codes = np.random.choice(self.codes, 
             size=np.sum(num_codes_per_visit_ls), replace=True).tolist()
         
         visit_nums = np.arange(1, num_visits+1) # should start with 1!
@@ -64,7 +64,7 @@ class DataGenerator(super):
     def simulate_data(self):
         concepts_dic = {k:[] for k in ['los', 'concept', 'segment', 'age']}
         for pid in range(self.num_patients):
-            out_dic = self.generate_ICD10_history(pid)
+            out_dic = self.generate_ICD10_history()
             for k, v in out_dic.items():
                 concepts_dic[k].append(v)
         return concepts_dic
