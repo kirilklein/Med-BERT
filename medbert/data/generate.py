@@ -78,7 +78,7 @@ def main(num_patients : int = typer.Argument(...),
         max_num_codes_per_visit: int = typer.Option(5),
         min_los: int = typer.Option(1),
         max_los: int = typer.Option(30),
-        num_codes: int = typer.Option(1000)):
+        num_codes: int = typer.Option(500)):
     generator = DataGenerator(num_patients, min_num_visits, max_num_visits, 
         min_num_codes_per_visit, max_num_codes_per_visit, 
         min_los, max_los, num_codes)
