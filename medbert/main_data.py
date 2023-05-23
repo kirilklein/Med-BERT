@@ -21,7 +21,11 @@ def main():
 
     # Overwrite nans and incorrect values
     features = torch.load(dataset_config.in_path) # list of lists
-    train, val, test = Splitter(ratios=dataset_config.split_ratios)(features)
+    splitter = Splitter(ratios=dataset_config.split_ratios)
+    splits = splitter(features)
+    splitter.save(dataset_config.out_dir)
+    train, test, val = splits['train'], splits['test'], splits['val']
+
     # Tokenize
     tokenizer = EHRTokenizer(config=tokenizer_config)
     train_encoded = tokenizer(train)
