@@ -3,6 +3,7 @@ import typer
 import pickle as pkl
 from os.path import join, split
 from tqdm import tqdm
+from transformers import BatchEncoding
 
 class EHRTokenizer():
     def __init__(self, vocabulary=None, config=None):
@@ -13,102 +14,101 @@ class EHRTokenizer():
                 '[PAD]':0,
                 '[MASK]':1,
                 '[UNK]':2,
+                '[CLS]':3,
+                '[SEP]':4,
             }
-            if config.sep_tokens:
-                self.vocabulary['[SEP]'] = len(self.vocabulary)
-            if config.cls_token:
-                self.vocabulary['[CLS]'] = len(self.vocabulary)
+            
         else:
             self.vocabulary = vocabulary
 
     def __call__(self, features):
         return self.batch_encode(features)
 
-    def encode(self, seq):
-        for code in seq:
-            if code not in self.vocabulary:
-                if not self.frozen:
-                    self.vocabulary[code] = len(self.vocabulary)
+    def encode(self, concepts):
+        if not self.frozen:
+            for concept in concepts:
+                if concept not in self.vocabulary:
+                    self.vocabulary[concept] = len(self.vocabulary)
                 
-        return [self.vocabulary.get(code, self.vocabulary['[UNK]']) for code in seq]
+        return [self.vocabulary.get(concept, self.vocabulary['[UNK]']) for concept in concepts]
+   
 
-    def batch_encode(self, features):
-        tokenized_data_dic = {'los': [], 'concept': [], 'segment': [], 'attention_mask': []}
-        concepts = [seq[2] for seq in features] # icd codes
-        pad_len = max([len(concept_seq) for concept_seq in concepts])   
-        if pad_len > self.config.truncation:
-            pad_len = self.config.truncation
-        for patient in tqdm(features, desc="Tokenizing", total=len(concepts)):
-            # truncation
-            concept_seq = patient[2]
-            visit_seq = patient[3]
-            if len(concept_seq)>self.config.truncation:
-                additional = 0
-                if self.config.cls_token:
-                    additional = 1
-                concept_seq = concept_seq[-self.config.truncation-additional:] # cut off oldest codes, -1 for [CLS]
-                visit_seq = visit_seq[-self.config.truncation-additional:]
-            if self.config.cls_token:
-                concept_seq.insert(0, self.vocabulary['[CLS]']) # add [CLS] token
-                visit_seq.insert(0, 0) # add [CLS] token
-                
-            # Tokenizing
-            target_seq = self.encode(concept_seq)
-            attention_mask = [1] * len(concept_seq)
-            # Pad tokenized code seq
-            if self.config.padding:
-                target_seq = self.pad(target_seq, pad_len)
-                visit_seq = self.pad(visit_seq, pad_len, pad_token=0)
-                attention_mask = self.pad(attention_mask, pad_len, pad_token=0)
+    def batch_encode(self, features: dict, padding=True, truncation=512):
+        data = {key: [] for key in features}
+        data['attention_mask'] = []
 
-            tokenized_data_dic['concept'].append(target_seq) 
-            tokenized_data_dic['segment'].append(visit_seq)
-            tokenized_data_dic['attention_mask'].append(attention_mask)
+        for patient in tqdm(self._patient_iterator(features), desc="Encoding patients"):
+            patient = self.insert_special_tokens(patient)                   # Insert SEP and CLS tokens
 
-        # tokenized_data_dic['pats'] = [seq[0] for seq in features] # don't need patient id
-        tokenized_data_dic['los'] = [seq[1] for seq in features]
-        return tokenized_data_dic
+            if truncation and len(patient['concept']) >  self.config.truncation:
+                patient = self.truncate(patient, max_len= self.config.truncation)        # Truncate patient to max_len
+            
+            # Created after truncation for efficiency
+            patient['attention_mask'] = [1] * len(patient['concept'])       # Initialize attention mask
+
+            patient['concept'] = self.encode(patient['concept'])            # Encode concepts
+
+            for key, value in patient.items():
+                data[key].append(value)
+
+        if padding:
+            longest_seq = max([len(s) for s in data['concept']])            # Find longest sequence
+            data = self.pad(data, max_len=longest_seq)                      # Pad sequences to max_len
+        
+        return BatchEncoding(data, tensor_type='pt' if padding else None)
     
-    def pad(self, seq: dict,  pad_len: int, pad_token: int=None):
-        if pad_token is None:
-            pad_token = self.vocabulary['[PAD]']
-        difference = pad_len - len(seq)
-        if difference > 0:
-            return seq + [pad_token] * difference
-        else:
-            return seq
+    def insert_special_tokens(self, patient: dict):
+        if self.config['sep_tokens']:
+            if 'segment' not in patient:
+                raise Exception('Cannot insert [SEP] tokens without segment information')
+            patient = self.insert_sep_tokens(patient)
 
-    def freeze_vocab(self):
+        if self.config.cls_token:
+            patient = self.insert_cls_token(patient)
+        
+        return patient
+    def insert_sep_tokens(self, patient: dict):
+        padded_segment = patient['segment'] + [None]                # Add None to last entry to avoid index out of range
+
+        for key, values in patient.items():
+            new_seq = []
+            for i, val in enumerate(values):
+                new_seq.append(val)
+
+                if padded_segment[i] != padded_segment[i+1]:
+                    token = '[SEP]' if key == 'concept' else val
+                    new_seq.append(token)
+
+            patient[key] = new_seq
+
+        return patient
+    
+    def insert_cls_token(self, patient: dict):
+        for key, values in patient.items():
+            token = '[CLS]' if key == 'concept' else 0          # Determine token value (CLS for concepts, 0 for rest)
+            patient[key] = [token] + values
+        return patient
+        
+    def _patient_iterator(self, features: dict):
+        for i in range(len(features['concept'])):
+            yield {key: values[i] for key, values in features.items()}
+    def pad(self, features: dict,  max_len: int):
+        padded_data = {key: [] for key in features}
+        for patient in self._patient_iterator(features):
+            difference = max_len - len(patient['concept'])
+
+            for key, values in patient.items():
+                token = self.vocabulary['[PAD]'] if key == 'concept' else 0
+                padded_data[key].append(values + [token] * difference)
+
+        return padded_data
+
+    def freeze_vocabulary(self):
         self.frozen = True
-
+        
     def save_vocab(self, dest):
         print(f"Writing vocab to {dest}")
         torch.save(self.vocabulary, dest)
 
 
-def main(
-    input_data_path: str = typer.Argument(..., 
-        help="pickle list in the form [[pid1, los1, codes1, visit_nums1], ...]"),
-    vocab_save_path: str = typer.Option(None, help="Path to save vocab, must end with .pt"),
-    out_data_path: str = typer.Option(None, help="Path to save tokenized data, must end with .pt"),
-    max_len: int = 
-        typer.Option(None, help="maximum number of tokens to keep for each visit"),
-    ):
 
-    with open(input_data_path, 'rb') as f:
-        data = pkl.load(f)
-
-    Tokenizer = EHRTokenizer()
-    tokenized_data_dic = Tokenizer.batch_encode(data, max_len=max_len)
-    if isinstance(vocab_save_path, type(None)):
-        data_dir = split(split(input_data_path)[0])[0]
-        vocab_save_path = join(join(data_dir, 'tokenized', split(input_data_path)[1][:-4]+"_vocab.pt"))
-    Tokenizer.save_vocab(vocab_save_path)
-    if isinstance(out_data_path, type(None)):
-        data_dir = split(split(input_data_path)[0])[0]
-        out_data_path = join(join(data_dir, 'tokenized', split(input_data_path)[1][:-4]+"_tokenized.pt"))
-    print(f"Save tokenized data to {out_data_path}")
-    torch.save(tokenized_data_dic, out_data_path)
-    
-if __name__ == "__main__":
-    typer.run(main)
