@@ -4,3 +4,10 @@ __pycache__
 *.pyc
 *.pt
 *.egg-info
+data/processed/synthetic/tokenizer.yaml
+/data/processed/synthetic/dataset.val
+/data/processed/synthetic/dataset.yaml
+/data/processed/synthetic/tokenizer.yaml
+/data/processed/synthetic/vocabulary.pt
+/data/processed/synthetic/dataset.test
+/data/processed/synthetic/dataset.train
