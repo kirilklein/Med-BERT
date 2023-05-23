@@ -97,3 +97,5 @@ class MLM_PLOS_Dataset(BaseDataset):
 
         return masked_concepts, target
 
+class BinaryOutcomeDataset: # TODO: Make this a subclass of BaseDataset
+    pass
