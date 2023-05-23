@@ -49,14 +49,12 @@ class MLM_PLOS_Dataset(BaseDataset):
         patient['concept'] = masked_concepts
         patient['target'] = target
         if self.plos:
-            patient['plos'] = (torch.tensor(patient['los']) >= self.min_los).any().int().item()
-      
-        patient = {key: torch.LongTensor(values) for key, values in patient.items()}
-        del patient['los'] # not further required
+            patient['plos'] = (patient['los'].detach() >= self.min_los).any().long()
+        
         return patient
 
     def _mask(self, patient: dict):
-        concepts = torch.tensor(patient['concept'])
+        concepts = patient['concept']
 
         N = len(concepts)
 
