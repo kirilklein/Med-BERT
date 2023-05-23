@@ -7,7 +7,7 @@ class PrecisionAtK:
         self.topk = topk
 
     def __call__(self, outputs, batch):
-        logits = outputs.logits
+        logits = outputs.prediction_logits
         target = batch['target']
         
         ind = torch.where((target != -100) & (target != 0))
@@ -25,7 +25,7 @@ class PrecisionAtK:
         
 
 def binary_hit(outputs, batch, threshold=0.5):
-    logits = outputs.logits
+    logits = outputs.prediction_logits
     target = batch['target']
 
     probs = torch.nn.functional.sigmoid(logits)
