@@ -2,17 +2,24 @@ from torch.utils.data import Dataset
 import torch
 
 
+
+
 class BaseDataset(Dataset):
     def __init__(self, features: dict, **kwargs):
         self.features = features
         self.kwargs = kwargs
-        self.max_segments = self.get_max_segments() # required for type vocab size
+        self.max_segments = self.get_max_segments()
 
     def __len__(self):
         return len(self.features['concept'])
 
     def __getitem__(self, index):
         return {key: values[index] for key, values in self.features.items()}
+
+    def get_max_segments(self):
+        if 'segment' not in self.features:
+            raise ValueError('No segment data found. Please add segment data to dataset')
+        return max([max(segment) for segment in self.features['segment']]) + 1
 
     def load_vocabulary(self, vocabulary):
         if isinstance(vocabulary, str):
@@ -21,14 +28,9 @@ class BaseDataset(Dataset):
             return vocabulary
         else:
             raise TypeError(f'Unsupported vocabulary input {type(vocabulary)}')
-    def get_max_segments(self):
-        if 'segment' not in self.features:
-            return None
-        return max([max(segment) for segment in self.features['segment']]) + 1    
-        
 
 class MLM_PLOS_Dataset(BaseDataset):
-    def __init__(self, features: dict, ignore_special_tokens=True, **kwargs):
+    def __init__(self, features: dict, ignore_special_tokens=True,**kwargs):
         super().__init__(features, **kwargs)
         self.plos = True
         self.min_los = self.kwargs.get('min_los', 0)
@@ -46,17 +48,26 @@ class MLM_PLOS_Dataset(BaseDataset):
         patient = super().__getitem__(index)
 
         masked_concepts, target = self._mask(patient)
+        if self.plos:
+            patient['plos'] = self.get_plos(patient)
         patient['concept'] = masked_concepts
         patient['target'] = target
-        if self.plos:
-            patient['plos'] = (patient['los'].detach() >= self.min_los).any().long()
-        
+    
         return patient
 
+    def get_plos(self, patient: dict):
+        """
+        Returns the PLOS of the patient
+        """
+        return (patient['los']>=self.kwargs['min_los']).nonzero()[0]
+        
+
     def _mask(self, patient: dict):
-        concepts = patient['concept']
+        concepts = torch.tensor(patient['concept'])
+        mask = torch.tensor(patient['attention_mask'])
 
         N = len(concepts)
+        N_nomask = len(mask[mask==1])
 
         # Initialize
         masked_concepts = torch.clone(concepts)
@@ -65,12 +76,9 @@ class MLM_PLOS_Dataset(BaseDataset):
        # Apply special token mask and create MLM mask
         eligible_mask = masked_concepts >= self.n_special_tokens
         eligible_concepts = masked_concepts[eligible_mask]        # Ignore special tokens
-        
-        masked = torch.zeros(len(eligible_concepts), dtype=torch.bool) # Initialize mask
-        while masked.sum() == 0:                                # Ensure at least one token is masked
-            rng = torch.rand(len(eligible_concepts))           # Random number for each token
-            masked = rng < self.masked_ratio                # Mask tokens with probability masked_ratio
-        
+        rng = torch.rand(len(eligible_concepts))                 # Random number for each token
+        masked = rng < self.masked_ratio                        # Mask tokens with probability masked_ratio
+
         # Get masked MLM concepts
         selected_concepts = eligible_concepts[masked]            # Select set % of the tokens
         adj_rng = rng[masked].div(self.masked_ratio)            # Fix ratio to 0-100 interval
@@ -82,11 +90,12 @@ class MLM_PLOS_Dataset(BaseDataset):
 
         # Apply operations (Mask, replace, keep)
         selected_concepts = torch.where(rng_mask, self.vocabulary['[MASK]'], selected_concepts) # Replace with [MASK]
-        selected_concepts = torch.where(rng_replace, torch.randint(self.n_special_tokens, len(self.vocabulary), (len(selected_concepts),)), selected_concepts) # Replace with random word
+        selected_concepts = torch.where(rng_replace, torch.randint(5, len(self.vocabulary), (len(selected_concepts),)), selected_concepts) # Replace with random word
+        # selected_concepts = torch.where(rng_keep, selected_concepts, selected_concepts)   # Redundant
 
-       # Update outputs
+        # Update outputs
         target[eligible_mask.nonzero()[:,0][masked]] = eligible_concepts[masked]    # Set "true" token
         masked_concepts[eligible_mask.nonzero()[:,0][masked]]= selected_concepts    # Sets new concepts
-        return masked_concepts, target
 
+        return masked_concepts, target
 

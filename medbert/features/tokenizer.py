@@ -54,7 +54,6 @@ class EHRTokenizer():
         if self.config.padding:
             longest_seq = max([len(s) for s in data['concept']])            # Find longest sequence
             data = self.pad(data, max_len=longest_seq)                      # Pad sequences to max_len
-        print({key: len(values) for key, values in data.items()})
         return BatchEncoding(data, tensor_type='pt' if self.config.padding else None)
     
     def insert_special_tokens(self, patient: dict):
