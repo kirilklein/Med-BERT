@@ -30,8 +30,7 @@ class DataGenerator(super):
         num_codes_per_visit_ls = np.random.randint(self.min_num_codes_per_visit, 
             self.max_num_codes_per_visit, 
             size=num_visits)
-        los_ls = np.random.randint(self.min_los, self.max_los, size=num_visits)\
-            .tolist()
+        los_nums = np.random.randint(self.min_los, self.max_los, size=num_visits)
         
         codes = self.generate_randomICD10_codes(self.num_codes)
         all_visit_codes = np.random.choice(codes, 
@@ -39,9 +38,10 @@ class DataGenerator(super):
         
         visit_nums = np.arange(1, num_visits+1) # should start with 1!
         visit_nums = np.repeat(visit_nums, num_codes_per_visit_ls).tolist()
+        los_nums = np.repeat(los_nums, num_codes_per_visit_ls).tolist()
         # simulate random increasing ages in size of all_visit_codes where age within a visit stays the same
         ages = self.simulate_ages(visits=visit_nums, max_age=110)
-        return {'los':los_ls, 'concept':all_visit_codes, 'segment':visit_nums, 'age':ages}
+        return {'los':los_nums, 'concept':all_visit_codes, 'segment':visit_nums, 'age':ages}
 
     def generate_randomICD10_codes(self, n):
         letters = np.random.choice([char for char in string.ascii_uppercase], 
