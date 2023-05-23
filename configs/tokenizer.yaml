@@ -1,5 +1,5 @@
-features_files: '../data/features/synthetic.pt'
-sep_tokens: false
-cls_token: false
+features_files: ..\data\processed\synthetic.pt
+sep_tokens: true
+cls_token: true
 padding: true
 truncation: 100

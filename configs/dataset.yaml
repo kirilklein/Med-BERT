@@ -1,4 +1,5 @@
-working_dir: '../data/processed/synthetic'
+in_path: ..\data\features\synthetic.pt
+out_dir: ..\data\processed\synthetic
 split_ratios: [0.7, 0.2, 0.1] # train, val, test
 masked_ratio: 0.15
-min_los: 3
+min_los: 10
