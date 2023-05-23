@@ -1,7 +1,0 @@
-working_dir: ../data/processed/synthetic
-split_ratios:
-- 0.7
-- 0.2
-- 0.1
-masked_ratio: 0.15
-min_los: 3
