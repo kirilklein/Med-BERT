@@ -41,7 +41,7 @@ class DataGenerator(super):
         visit_nums = np.repeat(visit_nums, num_codes_per_visit_ls).tolist()
         # simulate random increasing ages in size of all_visit_codes where age within a visit stays the same
         ages = self.simulate_ages(visits=visit_nums, max_age=110)
-        return {'pid':pid, 'los':los_ls, 'concept':all_visit_codes, 'segment':visit_nums, 'age':ages}
+        return {'los':los_ls, 'concept':all_visit_codes, 'segment':visit_nums, 'age':ages}
 
     def generate_randomICD10_codes(self, n):
         letters = np.random.choice([char for char in string.ascii_uppercase], 
@@ -62,7 +62,7 @@ class DataGenerator(super):
 
 
     def simulate_data(self):
-        concepts_dic = {k:[] for k in ['pid', 'los', 'concept', 'segment', 'age']}
+        concepts_dic = {k:[] for k in ['los', 'concept', 'segment', 'age']}
         for pid in range(self.num_patients):
             out_dic = self.generate_ICD10_history(pid)
             for k, v in out_dic.items():
