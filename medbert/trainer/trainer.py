@@ -103,6 +103,7 @@ class EHRTrainer():
         self.model.train()
         self.setup_run_folder()
         self.save_setup()
+        print(self.args.collate_fn)
         dataloader = DataLoader(self.train_dataset, batch_size=self.args.batch_size, shuffle=True, collate_fn=self.args.collate_fn)
         return dataloader
 
@@ -114,12 +115,6 @@ class EHRTrainer():
 
     def forward_pass(self, batch: dict):
         batch = self.to_device(batch)
-
-        print(batch['concept'].shape)
-        print(batch['attention_mask'].shape)
-        print(batch['segment'].shape)
-        print(batch['plos'].shape)
-        print(batch['target'].shape)
         return self.model(
             input_ids=batch['concept'],
             attention_mask=batch['attention_mask'],
@@ -141,8 +136,7 @@ class EHRTrainer():
 
         self.model.eval()
         dataloader = DataLoader(self.val_dataset, batch_size=self.args.batch_size, shuffle=True, collate_fn=self.args.collate_fn)
-        val_loop = tqdm(dataloader, total=len(dataloader))
-        val_loop.set_description('Validation')
+        val_loop = tqdm(dataloader, total=len(dataloader), desc='Validation')
         val_loss = 0
         metric_values = {name: [] for name in self.metrics}
         for batch in val_loop:
@@ -176,11 +170,11 @@ class EHRTrainer():
     def save_setup(self):
         
         OmegaConf.save(config=self.args, f=os.path.join(self.run_folder, 'config.yaml'))
-
-        with open(os.path.join(self.run_folder, 'model_config.json'), 'w') as f:
-            json.dump({
-                'model_config': self.model.config.to_dict(),    # Maybe .to_diff_dict()?
-            }, f)
+        model_config = self.model.config.to_dict()
+        model_config = OmegaConf.create(model_config)
+        with open(os.path.join(self.run_folder, 'model_config.yaml'), 'w') as f:
+            f.write(OmegaConf.to_yaml(model_config))
+       
 
     def save_checkpoint(self, id, **kwargs):
         # Model/training specific
