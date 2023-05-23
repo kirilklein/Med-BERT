@@ -59,12 +59,12 @@ class MLM_PLOS_Dataset(BaseDataset):
         """
         Returns the PLOS of the patient
         """
-        return (patient['los']>=self.kwargs['min_los']).nonzero()[0]
+        return (patient['los'].clone().detach()>=self.kwargs['min_los']).nonzero()[0]
         
 
     def _mask(self, patient: dict):
-        concepts = torch.tensor(patient['concept'])
-        mask = torch.tensor(patient['attention_mask'])
+        concepts = patient['concept']
+        mask = patient['attention_mask']
 
         N = len(concepts)
         N_nomask = len(mask[mask==1])
