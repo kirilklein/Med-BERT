@@ -61,6 +61,7 @@ class Censor():
         Censor features before outcome
         """
         censored_features = {}
+        censored_outcomes = []
         censored_patients = []
         for patient, pat_outcome in self._patient_iterator(features, outcomes):
             censor_index = self._find_censor_index(patient, pat_outcome)
@@ -68,9 +69,10 @@ class Censor():
                 continue
             censored_patient = {key: v[:censor_index] for key, v in patient.items()}
             censored_patients.append(censored_patient)
+            censored_outcomes.append(1 if pat_outcome < torch.inf else 0)
 
         censored_features = {key: [patient[key] for patient in censored_patients] for key in censored_patients[0]}
-        return censored_features
+        return censored_features, censored_outcomes
         
     def _find_censor_index(self, patient, pat_outcome):
         """Censor index is the index of the last observation before the outcome - self.censor_time"""
