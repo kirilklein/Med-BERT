@@ -13,7 +13,6 @@ def main():
 
     train_dataset = torch.load(cfg.get('train_dataset', 'dataset.train'))
     val_dataset = torch.load(cfg.get('val_dataset', 'dataset.val'))
-    print(int(len(train_dataset.vocabulary)))
     model = BertForPreTraining(
         BertConfig(
             vocab_size=len(train_dataset.vocabulary),
