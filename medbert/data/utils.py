@@ -39,5 +39,11 @@ class Splitter():
 
         print(f'Resulting split ratios: {[round(len(s) / N, 2) for s in self.splits.values()]}')
         
+    def split_outcomes(self, outcomes: list)-> dict:
+        outcomes_splits = {}
+        for set_, split in self.splits.items():
+            print(split)
+            outcomes_splits[set_] = outcomes[split] 
+        return outcomes_splits
     def save(self, dest: str):
         torch.save(self.splits, join(dest, 'splits.pt'))
