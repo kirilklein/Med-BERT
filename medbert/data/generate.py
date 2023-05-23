@@ -1,6 +1,7 @@
 import numpy as np
 import torch
 import string 
+import random
 import typer
 
 
@@ -24,18 +25,23 @@ class DataGenerator(super):
         self.num_codes = num_codes
 
     def generate_ICD10_history(self, pid):
-        codes = self.generate_randomICD10_codes(self.num_codes)
+        
         num_visits = np.random.randint(self.min_num_visits, self.max_num_visits)
         num_codes_per_visit_ls = np.random.randint(self.min_num_codes_per_visit, 
             self.max_num_codes_per_visit, 
             size=num_visits)
         los_ls = np.random.randint(self.min_los, self.max_los, size=num_visits)\
             .tolist()
+        
+        codes = self.generate_randomICD10_codes(self.num_codes)
         all_visit_codes = np.random.choice(codes, 
             size=np.sum(num_codes_per_visit_ls), replace=True).tolist()
+        
         visit_nums = np.arange(1, num_visits+1) # should start with 1!
         visit_nums = np.repeat(visit_nums, num_codes_per_visit_ls).tolist()
-        return [pid, los_ls, all_visit_codes, visit_nums]
+        # simulate random increasing ages in size of all_visit_codes where age within a visit stays the same
+        ages = self.simulate_ages(visits=visit_nums, max_age=110)
+        return {'pid':pid, 'los':los_ls, 'concept':all_visit_codes, 'segment':visit_nums, 'age':ages}
 
     def generate_randomICD10_codes(self, n):
         letters = np.random.choice([char for char in string.ascii_uppercase], 
@@ -45,9 +51,23 @@ class DataGenerator(super):
             letter, number in zip(letters, numbers)]
         return codes
 
+    def simulate_ages(self, visits, max_age=110):
+        ages = []
+        current_age = random.randint(0, max_age-10)
+        for i in range(len(visits)):
+            if i > 0 and visits[i] != visits[i-1]:
+                current_age += random.randint(0, max_age - current_age)
+            ages.append(current_age)
+        return ages
+
+
     def simulate_data(self):
+        concepts_dic = {k:[] for k in ['pid', 'los', 'concept', 'segment', 'age']}
         for pid in range(self.num_patients):
-            yield self.generate_ICD10_history('p_'+str(pid))
+            out_dic = self.generate_ICD10_history(pid)
+            for k, v in out_dic.items():
+                concepts_dic[k].append(v)
+        return concepts_dic
 
 def main(num_patients : int = typer.Argument(...), 
         save_name: str = typer.Argument(..., 
@@ -63,7 +83,7 @@ def main(num_patients : int = typer.Argument(...),
         min_num_codes_per_visit, max_num_codes_per_visit, 
         min_los, max_los, num_codes)
         
-    torch.save([hist for hist in generator.simulate_data()], save_name)
+    torch.save(generator.simulate_data(), save_name)
 
 
 if __name__ == '__main__':
