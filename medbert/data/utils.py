@@ -6,7 +6,7 @@ from os.path import join, split
 import dateutil
 import pandas as pd
 import torch
-from creators import BaseCreator
+from .creators import BaseCreator
 
 
 class ConceptLoader():
@@ -17,10 +17,8 @@ class ConceptLoader():
         # Get all concept files
         concept_paths = os.path.join(data_dir, 'concept.*')
         path = glob.glob(concept_paths)
-
         # Filter out concepts files
         path = [p for p in path if (split(p)[1]).split('.')[1] in concepts]
-        
         # Load concepts
         concepts = pd.concat([self._read_file(p) for p in path], ignore_index=True).drop_duplicates()
         
@@ -74,12 +72,13 @@ class FeatureMaker():
         }
         self.creators = {creator.id: creator for creator in BaseCreator.__subclasses__()}
         self.pipeline = self.create_pipeline()
-        self.add_outcomes = hasattr(self.config, False)
+        self.add_outcomes = getattr(self.config, "add_outcomes", False) 
+        
 
     def __call__(self, concepts: pd.DataFrame, patients_info: pd.DataFrame):
         for creator in self.pipeline:
             concepts = creator(concepts, patients_info)
-
+            concepts['CONCEPT'] = concepts['CONCEPT'].astype(str)
         features = self.create_features(concepts, patients_info)
 
         return features
