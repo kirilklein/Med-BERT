@@ -74,6 +74,7 @@ class FeatureMaker():
         }
         self.creators = {creator.id: creator for creator in BaseCreator.__subclasses__()}
         self.pipeline = self.create_pipeline()
+        self.add_outcomes = hasattr(self.config, False)
 
     def __call__(self, concepts: pd.DataFrame, patients_info: pd.DataFrame):
         for creator in self.pipeline:
@@ -108,20 +109,47 @@ class FeatureMaker():
                 value.append(patient[feature.upper()].tolist())
 
         # Add outcomes if in config
-        outcomes = {outcome: [] for outcome in self.config.outcomes}
+        
         info_dict = patients_info.set_index('PID').to_dict('index')
         origin_point = datetime(**self.config.features.abspos)
         
         # Add outcomes
-        for pid, patient in concepts.groupby('PID'):
-            for outcome in self.config.outcomes:
-                patient_outcome = info_dict[pid][f'OUTCOME_{outcome}']
-                if pd.isna(patient_outcome):
-                    outcomes[outcome].append(patient_outcome)
-                else:
-                    outcomes[outcome].append((patient_outcome - origin_point).total_seconds() / 60 / 60)
+        if self.add_outcomes:
+            outcomes = {outcome: [] for outcome in self.config.outcomes}
+            for pid, patient in concepts.groupby('PID'):
+                for outcome in self.config.outcomes:
+                    patient_outcome = info_dict[pid][f'OUTCOME_{outcome}']
+                    if pd.isna(patient_outcome):
+                        outcomes[outcome].append(patient_outcome)
+                    else:
+                        outcomes[outcome].append((patient_outcome - origin_point).total_seconds() / 60 / 60)
 
-        return self.features, outcomes
+            return self.features, outcomes
+        else:
+            return self.features
+
+
+class Excluder():
+    def __call__(self, features: dict, outcomes: dict=None, k: int = 2) -> pd.DataFrame:
+        return self.exclude_by_k(features, outcomes, k=k)
+    
+    @staticmethod
+    def exclude_by_k(features: dict, outcomes: dict=None, k: int = 2) -> pd.DataFrame:
+        kept_indices = []
+        for i, concepts in enumerate(features['concept']):
+            unique_codes = set([code for code in concepts if not code.startswith('[')])
+            if len(unique_codes) >= k:
+                kept_indices.append(i)
+
+        for key, values in features.items():
+            features[key] = [values[i] for i in kept_indices]
+        if outcomes:
+            for key, values in outcomes.items():
+                outcomes[key] = [values[i] for i in kept_indices]
+        if outcomes:
+            return features, outcomes
+        else:
+            return features
 
 class Splitter():
     def __init__(self, ratios: dict = {'train':0.7, 'val':0.2, 'test':0.1}) -> None:
