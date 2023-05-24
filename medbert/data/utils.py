@@ -118,7 +118,7 @@ class FeatureMaker():
                 for outcome in self.config.outcomes:
                     patient_outcome = info_dict[pid][f'{outcome}']
                     if pd.isna(patient_outcome):
-                        outcomes.append(None)
+                        outcomes.append(torch.inf)
                     else:
                         outcomes.append((patient_outcome - origin_point).total_seconds() / 60 / 60)
 
