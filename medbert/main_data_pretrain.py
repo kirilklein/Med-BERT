@@ -1,3 +1,4 @@
+import os
 from os.path import join
 
 import torch
@@ -35,6 +36,8 @@ def main():
     print("Splitting data")
     splitter = Splitter(ratios=cfg.split_ratios)
     splits = splitter(features)
+    if not os.path.exists(cfg.out_dir):
+        os.makedirs(cfg.out_dir)
     splitter.save(cfg.out_dir)
     train, test, val = splits['train'], splits['test'], splits['val']
 
