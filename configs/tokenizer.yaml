@@ -1,5 +1,0 @@
-features_files: ..\data\processed\synthetic.pt
-sep_tokens: true
-cls_token: true
-padding: true
-truncation: 100
