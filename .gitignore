@@ -14,3 +14,7 @@ data/processed/synthetic/tokenizer.yaml
 medbert/runs/test/model_config.yaml
 .gitignore
 .gitignore
+data/raw/synthea10k/concept.diagnose.csv
+.gitignore
+data/raw/synthea10k/patients_info.csv
+data/raw/synthea10k/concept.medication.csv
