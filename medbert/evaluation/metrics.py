@@ -1,4 +1,6 @@
+from typing import Any
 import torch
+from sklearn.metrics import accuracy_score
 
 
 class PrecisionAtK:
@@ -34,4 +36,9 @@ def binary_hit(outputs, batch, threshold=0.5):
     correct = (predictions == target).float().mean().item()
 
     return correct
+class Accuracy():
+    def __init__(self) -> None:
+        pass
+    def __call__(self, outputs, batch) -> Any:
+        return accuracy_score(outputs, batch)
 
