@@ -186,3 +186,15 @@ class EHRTrainer():
     def info(self, message):
         if self.args.info:
             print(f'[INFO] {message}')
+
+class EHRFineTune(EHRTrainer):
+    def forward_pass(self, batch: dict):
+        batch = self.to_device(batch)
+        return self.model(
+            input_ids=batch['concept'],
+            attention_mask=batch['attention_mask'],
+            token_type_ids=batch['segment'] if 'segment' in batch else None,
+            position_ids=batch['age'].long() if 'age' in batch else None,
+            labels=batch['target'] if 'target' in batch else None,
+        )
+
