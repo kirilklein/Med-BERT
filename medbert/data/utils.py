@@ -113,14 +113,14 @@ class FeatureMaker():
         origin_point = datetime(**self.config.features.abspos)
         # Add outcomes
         if hasattr(self.config, 'outcomes'):
-            outcomes = {outcome: [] for outcome in self.config.outcomes}
+            outcomes = []
             for pid, patient in concepts.groupby('PID'):
                 for outcome in self.config.outcomes:
                     patient_outcome = info_dict[pid][f'{outcome}']
                     if pd.isna(patient_outcome):
-                        outcomes[outcome].append(None)
+                        outcomes.append(None)
                     else:
-                        outcomes[outcome].append((patient_outcome - origin_point).total_seconds() / 60 / 60)
+                        outcomes.append((patient_outcome - origin_point).total_seconds() / 60 / 60)
 
             return self.features, outcomes
         else:
