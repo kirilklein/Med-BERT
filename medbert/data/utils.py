@@ -1,6 +1,6 @@
 import glob
 import os
-from os.path import join
+from os.path import join, split
 
 import pandas as pd
 import torch
@@ -14,9 +14,8 @@ class ConceptLoader():
         # Get all concept files
         concept_paths = os.path.join(data_dir, 'concept.*')
         path = glob.glob(concept_paths)
-
         # Filter out concepts files
-        path = [p for p in path if p.split('.')[1] in concepts]
+        path = [p for p in path if (split(p)[1]).split('.')[1] in concepts]
         
         # Load concepts
         concepts = pd.concat([self._read_file(p) for p in path], ignore_index=True).drop_duplicates()
