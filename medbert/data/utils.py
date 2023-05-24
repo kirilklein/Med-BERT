@@ -1,7 +1,9 @@
 import glob
 import os
+from datetime import datetime
 from os.path import join, split
 
+import dateutil
 import pandas as pd
 import torch
 
@@ -14,6 +16,7 @@ class ConceptLoader():
         # Get all concept files
         concept_paths = os.path.join(data_dir, 'concept.*')
         path = glob.glob(concept_paths)
+
         # Filter out concepts files
         path = [p for p in path if (split(p)[1]).split('.')[1] in concepts]
         
@@ -41,6 +44,20 @@ class ConceptLoader():
             df[col] = df[col].dt.tz_localize(None)
 
         return df
+    @staticmethod
+    def detect_date_columns(df: pd.DataFrame):
+        date_columns = []
+        for col in df.columns:
+            if isinstance(df[col], datetime):
+                continue
+            if 'TIME' in col.upper() or 'DATE' in col.upper():
+                try:
+                    first_non_na = df.loc[df[col].notna(), col].iloc[0]
+                    dateutil.parser.parse(first_non_na)
+                    date_columns.append(col)
+                except:
+                    continue
+        return date_columns
 
 class Splitter():
     def __init__(self, ratios: dict = {'train':0.7, 'val':0.2, 'test':0.1}) -> None:
