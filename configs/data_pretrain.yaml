@@ -11,6 +11,7 @@ features:
     day: 26
   segment: true
   background: []
+  los: true
 split_ratios: 
   train: 0.7
   val: 0.2

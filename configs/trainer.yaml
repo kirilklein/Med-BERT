@@ -1,5 +1,5 @@
-train_dataset: ..\data\processed\synthetic\dataset.train
-val_dataset: ..\data\processed\synthetic\dataset.val
+train_dataset: ..\data\processed\pretrain\synthea500\dataset.train
+val_dataset: ..\data\processed\pretrain\synthea500\dataset.val
 
 model:
   max_position_embeddings: 512
@@ -15,11 +15,11 @@ optimizer:
   epsilon: 1e-6
 
 trainer_args:
-  batch_size: 8
-  effective_batch_size: 16
+  batch_size: 32
+  effective_batch_size: 128
   epochs: 2
   info: true
-  run_name: test
+  run_name: test2
 
 collate_fn: null
 
