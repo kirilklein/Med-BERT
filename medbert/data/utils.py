@@ -111,7 +111,6 @@ class FeatureMaker():
         
         info_dict = patients_info.set_index('PID').to_dict('index')
         origin_point = datetime(**self.config.features.abspos)
-        print(info_dict)
         # Add outcomes
         if hasattr(self.config, 'outcomes'):
             outcomes = {outcome: [] for outcome in self.config.outcomes}
@@ -214,7 +213,7 @@ class Splitter():
 class Censor():
     def __init__(self, censor_time: float = 0, )-> None:
         """Abspos before outcome to censor"""
-        self.censor_time = censor_time
+        self.censor_time = censor_time * 365.25 * 24 # censor time in hours
 
     def __call__(self, features: dict, outcomes: list)-> dict:
         return self.censor_features(features, outcomes)
