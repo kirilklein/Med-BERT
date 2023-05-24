@@ -40,5 +40,8 @@ class Accuracy():
     def __init__(self) -> None:
         pass
     def __call__(self, outputs, batch) -> Any:
-        return accuracy_score(outputs, batch)
+        logits = outputs.prediction_logits
+        probas = torch.nn.functional.softmax(logits, dim=-1)
+        _, predictions = torch.max(probas, dim=-1)
+        return accuracy_score(predictions, batch['target'])
 
