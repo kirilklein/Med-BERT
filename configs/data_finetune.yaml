@@ -1,10 +1,31 @@
-in_data: ..\data\features\synthetic.pt
-in_outcomes: ..\data\features\synthetic_outcomes.pt
-out_dir: ..\data\processed\finetune\synthetic
-censor_time: 0.5 # assuming abspos is given in years
+out_dir: ..\data\processed\finetune_death\synthea500
+loader:
+  concepts: [diagnose, medication]
+  data_dir: ..\data\raw\synthea500
+  patients_info: patients_info.csv
+features:
+  age: true
+  abspos:
+    year: 1900
+    month: 1
+    day: 26
+  segment: true
+  background: []
+  los: true
 split_ratios: 
   train: 0.7
   val: 0.2
   test: 0.1
-masked_ratio: 0.15
-min_los: 3
+tokenizer:
+  sep_tokens: true
+  cls_token: true
+  padding: true
+  truncation: 100
+dataset:
+  masked_ratio: 0.15
+  min_los: 3
+  ignore_special_tokens: true
+outcomes:
+  - DEATHDATE
+min_concepts: 2
+censor_time: 1 # censor time in years
