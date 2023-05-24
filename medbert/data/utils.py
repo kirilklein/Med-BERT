@@ -70,9 +70,9 @@ class FeatureMaker():
             'concept': 0,
             'background': -1
         }
-        self.creators = {creator.id: creator for creator in BaseCreator.__subclasses__()}
+        self.creators = {creator.id: creator for creator in BaseCreator.__subclasses__() if creator.id in self.config.features.keys()}
         self.pipeline = self.create_pipeline()
-        self.add_outcomes = getattr(self.config, "add_outcomes", False) 
+        self.add_outcomes = getattr(self.config.features, "add_outcomes", False) 
         
 
     def __call__(self, concepts: pd.DataFrame, patients_info: pd.DataFrame):
