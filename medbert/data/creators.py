@@ -40,7 +40,8 @@ class SegmentCreator(BaseCreator):
         concepts = concepts.sort_values(['PID', 'TIMESTAMP'])
 
         concepts['DIFF'] = concepts.groupby('PID')['TIMESTAMP'].diff()
-        concepts['NEW_SEGMENT'] = concepts['DIFF'] > pd.Timedelta(days=1)
+        print("Using 3 days as a rough estimation of a new visit")
+        concepts['NEW_SEGMENT'] = concepts['DIFF'] > pd.Timedelta(days=3) # 3 days is a rough estimation of a new segment
         concepts['SEGMENT'] = concepts.groupby('PID', group_keys=False)['NEW_SEGMENT'].apply(lambda x: x.astype(int).cumsum()) + 1
         concepts = concepts.drop(columns=['DIFF', 'NEW_SEGMENT'])
 
@@ -54,7 +55,7 @@ class LOSCreator(BaseCreator):
         grouped = concepts.groupby(['PID', 'SEGMENT'])
 
         # Calculate LOS for each group and assign it back to the original dataframe
-        concepts['LOS'] = grouped['TIMESTAMP'].transform(lambda x: (x.max() - x.min())/ pd.Timedelta(hours=1))
+        concepts['LOS'] = grouped['TIMESTAMP'].transform(lambda x: (x.max() - x.min()+pd.Timedelta(days=1))/ pd.Timedelta(days=1))
         return concepts
 
 class BackgroundCreator(BaseCreator):
