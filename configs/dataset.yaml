@@ -1,8 +1,0 @@
-in_path: ..\data\features\synthetic.pt
-out_dir: ..\data\processed\pretrain\synthetic
-split_ratios: 
-  train: 0.7
-  val: 0.2
-  test: 0.1
-masked_ratio: 0.15
-min_los: 3
