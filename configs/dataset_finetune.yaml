@@ -1,6 +1,7 @@
 in_data: ..\data\features\synthetic.pt
 in_outcomes: ..\data\features\synthetic_outcomes.pt
 out_dir: ..\data\processed\finetune\synthetic
+censor_time: 0.5 # assuming abspos is given in years
 split_ratios: 
   train: 0.7
   val: 0.2

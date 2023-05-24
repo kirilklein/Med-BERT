@@ -11,3 +11,5 @@ data/processed/synthetic/tokenizer.yaml
 /data/processed/synthetic/vocabulary.pt
 /data/processed/synthetic/dataset.test
 /data/processed/synthetic/dataset.train
+medbert/runs/test/model_config.yaml
+.gitignore
