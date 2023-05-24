@@ -167,10 +167,10 @@ class EHRTrainer():
         
         OmegaConf.save(config=self.args, f=os.path.join(self.run_folder, 'config.yaml'))
         model_config = self.model.config.to_dict()
-        model_config = OmegaConf.create(model_config)
         with open(os.path.join(self.run_folder, 'model_config.yaml'), 'w') as f:
-            f.write(OmegaConf.to_yaml(model_config))
-       
+            f.write(OmegaConf.to_yaml(OmegaConf.create(model_config)))
+        with open(os.path.join(self.run_folder, 'config.json'), 'w') as f:
+            json.dump(model_config, f)
 
     def save_checkpoint(self, id, **kwargs):
         # Model/training specific
