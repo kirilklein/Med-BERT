@@ -30,7 +30,7 @@ class BaseDataset(Dataset):
             raise TypeError(f'Unsupported vocabulary input {type(vocabulary)}')
 
 class MLM_PLOS_Dataset(BaseDataset):
-    def __init__(self, features: dict, ignore_special_tokens=True,**kwargs):
+    def __init__(self, features: dict, **kwargs):
         super().__init__(features, **kwargs)
         self.plos = True
         self.min_los = self.kwargs.get('min_los', 0)
@@ -39,7 +39,7 @@ class MLM_PLOS_Dataset(BaseDataset):
             self.plos = False
         self.vocabulary = self.load_vocabulary(self.kwargs.get('vocabulary', 'vocabulary.pt'))
         self.masked_ratio = self.kwargs.get('masked_ratio', 0.3)
-        if ignore_special_tokens:
+        if kwargs.get('ignore_special_tokens', True):
             self.n_special_tokens = len([token for token in self.vocabulary if token.startswith('[')])
         else:
             self.n_special_tokens = 0
