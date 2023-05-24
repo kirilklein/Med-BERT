@@ -1,10 +1,12 @@
-from hydra import initialize, compose
-from omegaconf import OmegaConf
-from data.utils import Splitter, ConceptLoader, FeatureMaker, Excluder
-from features.tokenizer import EHRTokenizer
-from features.dataset import MLM_PLOS_Dataset
-import torch
 from os.path import join
+
+import torch
+from data.utils import ConceptLoader, Excluder, FeatureMaker, Splitter
+from features.dataset import MLM_PLOS_Dataset
+from features.tokenizer import EHRTokenizer
+from hydra import compose, initialize
+from omegaconf import OmegaConf
+
 
 def main():
     with initialize(config_path='../configs'):
@@ -12,11 +14,8 @@ def main():
     
     # save configs in dataset_config.working_dir!
     
-    
     """
         Loads data
-        Finds outcomes
-        Censors
         Creates features
         Excludes patients with <k concepts
         Splits data
@@ -39,21 +38,25 @@ def main():
     splitter.save(cfg.out_dir)
     train, test, val = splits['train'], splits['test'], splits['val']
 
-    # Tokenize
+    print("Tokenizing")
     tokenizer = EHRTokenizer(config=cfg.tokenizer)
     train_encoded = tokenizer(train)
     tokenizer.freeze_vocabulary()
     tokenizer.save_vocab(join(cfg.out_dir, 'vocabulary.pt'))
     test_encoded = tokenizer(test)
     val_encoded = tokenizer(val)
-    # To dataset
+
+    print("Dataset with MLM and prolonged length of stay")
     train_dataset = MLM_PLOS_Dataset(train_encoded, vocabulary=tokenizer.vocabulary, **cfg.dataset)
     test_dataset = MLM_PLOS_Dataset(test_encoded, vocabulary=tokenizer.vocabulary, **cfg.dataset)
     val_dataset = MLM_PLOS_Dataset(val_encoded, vocabulary=tokenizer.vocabulary, **cfg.dataset)
+
+    print("Saving datasets")
     torch.save(train_dataset, join(cfg.out_dir, 'dataset.train'))
     torch.save(test_dataset, join(cfg.out_dir, 'dataset.test'))
     torch.save(val_dataset,  join(cfg.out_dir, 'dataset.val'))
-    
+
+    print("Saving config")
     OmegaConf.save(config=cfg, f=join(cfg.out_dir, 'data.yaml'))
     
 
