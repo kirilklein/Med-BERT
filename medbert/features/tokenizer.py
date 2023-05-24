@@ -32,6 +32,20 @@ class EHRTokenizer():
                 
         return [self.vocabulary.get(concept, self.vocabulary['[UNK]']) for concept in concepts]
    
+    @staticmethod
+    def truncate(patient: dict, max_len: int):
+        # Find length of background sentence (+2 to include CLS token and SEP token)
+        background_length = len([x for x in patient.get('concept', []) if x.startswith('BG_')]) + 2
+        truncation_length = max_len - background_length
+        
+        # Do not start seq with SEP token (SEP token is included in background sentence)
+        if patient['concept'][-truncation_length] == '[SEP]':
+            truncation_length -= 1
+
+        for key, value in patient.items():
+            patient[key] = value[:background_length] + value[-truncation_length:]    # Keep background sentence + newest information
+
+        return patient
 
     def batch_encode(self, features: dict):
         data = {key: [] for key in features}
