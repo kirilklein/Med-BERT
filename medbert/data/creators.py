@@ -21,6 +21,7 @@ class AgeCreator(BaseCreator):
         return concepts
 
 class AbsposCreator(BaseCreator):
+    """Add absolute position of concept in hours since origin point"""
     feature = id = 'abspos'
     def create(self, concepts: pd.DataFrame, patients_info: pd.DataFrame):
         origin_point = datetime(**self.config.features.abspos)
