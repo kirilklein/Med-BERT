@@ -1,6 +1,6 @@
 from typing import Any
 import torch
-from sklearn.metrics import accuracy_score, recall_score, roc_auc_score
+from sklearn.metrics import accuracy_score, recall_score, precision_score, roc_auc_score
 
 
 class PrecisionAtK:
@@ -52,8 +52,17 @@ class Precision():
         logits = outputs.logits
         probas = torch.nn.functional.softmax(logits, dim=-1)
         _, predictions = torch.max(probas, dim=-1)
-        return recall_score(batch['target'], predictions)
+        return precision_score(batch['target'], predictions, zero_division=0)
     
+class Recall():
+    def __init__(self) -> None:
+        pass
+    def __call__(self, outputs, batch) -> Any:
+        logits = outputs.logits
+        probas = torch.nn.functional.softmax(logits, dim=-1)
+        _, predictions = torch.max(probas, dim=-1)
+        return recall_score(batch['target'], predictions, zero_division=0)
+
 class ROC_AUC():
     def __init__(self) -> None:
         pass
