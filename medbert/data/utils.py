@@ -6,6 +6,7 @@ from os.path import join, split
 import dateutil
 import pandas as pd
 import torch
+
 from .creators import BaseCreator
 
 
@@ -72,7 +73,6 @@ class FeatureMaker():
         }
         self.creators = {creator.id: creator for creator in BaseCreator.__subclasses__() if creator.id in self.config.features.keys()}
         self.pipeline = self.create_pipeline()
-        self.add_outcomes = getattr(self.config.features, "add_outcomes", False) 
         
 
     def __call__(self, concepts: pd.DataFrame, patients_info: pd.DataFrame):
@@ -87,7 +87,7 @@ class FeatureMaker():
         # Pipeline creation
         pipeline = []
         for id in self.config.features:
-            creator = self.creators[id](self.config)
+            creator = self.creators[id](self.config.features)
             pipeline.append(creator)
             if getattr(creator, 'feature', None) is not None:
                 self.features[creator.feature] = []
@@ -111,15 +111,15 @@ class FeatureMaker():
         
         info_dict = patients_info.set_index('PID').to_dict('index')
         origin_point = datetime(**self.config.features.abspos)
-        
+        print(info_dict)
         # Add outcomes
-        if self.add_outcomes:
+        if hasattr(self.config, 'outcomes'):
             outcomes = {outcome: [] for outcome in self.config.outcomes}
             for pid, patient in concepts.groupby('PID'):
                 for outcome in self.config.outcomes:
-                    patient_outcome = info_dict[pid][f'OUTCOME_{outcome}']
+                    patient_outcome = info_dict[pid][f'{outcome}']
                     if pd.isna(patient_outcome):
-                        outcomes[outcome].append(patient_outcome)
+                        outcomes[outcome].append(None)
                     else:
                         outcomes[outcome].append((patient_outcome - origin_point).total_seconds() / 60 / 60)
 
@@ -149,6 +149,20 @@ class Excluder():
             return features, outcomes
         else:
             return features
+        
+class Cleaner():
+    def __init__(self, cfg):
+        self.cfg = cfg
+
+    def __call__(self, concepts: pd.DataFrame, patients_info: pd.DataFrame) -> pd.DataFrame:
+        # drop nans
+        concepts = concepts.dropna(subset=['CONCEPT'])
+        # Remove patients from patients_info that are not in concepts
+        patients_info = patients_info[patients_info['PID'].isin(concepts['PID'])]
+        # Remove concepts which don't have PID in patients_info
+        concepts = concepts[concepts['PID'].isin(patients_info['PID'])]
+        return concepts, patients_info        
+
 
 class Splitter():
     def __init__(self, ratios: dict = {'train':0.7, 'val':0.2, 'test':0.1}) -> None:
