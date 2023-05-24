@@ -97,5 +97,13 @@ class MLM_PLOS_Dataset(BaseDataset):
 
         return masked_concepts, target
 
-class BinaryOutcomeDataset: # TODO: Make this a subclass of BaseDataset
-    pass
+class BinaryOutcomeDataset(BaseDataset): 
+    def __init__(self, features: dict, outcomes: torch.tensor, **kwargs):
+        super().__init__(features, **kwargs)
+        self.outcomes = outcomes
+        self.vocabulary = self.load_vocabulary(self.kwargs.get('vocabulary', 'vocabulary.pt'))
+    def __getitem__(self, index):
+        patient = super().__getitem__(index)
+        patient['target'] = self.outcomes[index].item()
+        return patient
+        
