@@ -1,8 +1,16 @@
-out_dir: ..\data\processed\pretrain\synthea100
+out_dir: ..\data\processed\pretrain\synthea
 loader:
   concepts: [diagnose, medication]
-  data_dir: ..\data\raw\synthea100
+  data_dir: ..\data\raw\synthea
   patients_info: patients_info.csv
+features:
+  age: true
+  abspos:
+    year: 1900
+    month: 1
+    day: 26
+  segment: true
+  background: []
 split_ratios: 
   train: 0.7
   val: 0.2
