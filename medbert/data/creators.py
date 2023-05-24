@@ -41,10 +41,20 @@ class SegmentCreator(BaseCreator):
 
         concepts['DIFF'] = concepts.groupby('PID')['TIMESTAMP'].diff()
         concepts['NEW_SEGMENT'] = concepts['DIFF'] > pd.Timedelta(days=1)
-        concepts['SEGMENT'] = concepts.groupby('PID')['NEW_SEGMENT'].apply(lambda x: x.astype(int).cumsum()) + 1
+        concepts['SEGMENT'] = concepts.groupby('PID', group_keys=False)['NEW_SEGMENT'].apply(lambda x: x.astype(int).cumsum()) + 1
         concepts = concepts.drop(columns=['DIFF', 'NEW_SEGMENT'])
 
         # concepts['SEGMENT'] = segments
+        return concepts
+    
+class LOSCreator(BaseCreator):
+    feature = id = 'los'
+    def create(self, concepts: pd.DataFrame, patients_info: pd.DataFrame):
+       # Create a groupby object
+        grouped = concepts.groupby(['PID', 'SEGMENT'])
+
+        # Calculate LOS for each group and assign it back to the original dataframe
+        concepts['LOS'] = grouped['TIMESTAMP'].transform(lambda x: (x.max() - x.min())/ pd.Timedelta(hours=1))
         return concepts
 
 class BackgroundCreator(BaseCreator):
