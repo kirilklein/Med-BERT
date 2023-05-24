@@ -1,0 +1,16 @@
+train_dataset: ..\data\processed\finetune_death\synthea500\dataset.train
+val_dataset: ..\data\processed\finetune_death\synthea500\dataset.val
+
+model_path: runs\finetune_death_test\checkpoint_epoc6_end.pt
+
+optimizer:
+  lr: 5e-5
+  weight_decay: 0
+  epsilon: 1e-6
+
+trainer_args:
+  batch_size: 32
+  effective_batch_size: 128
+  epochs: 10
+  info: true
+  run_name: finetune_death_perturb_test

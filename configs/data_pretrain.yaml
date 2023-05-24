@@ -1,7 +1,7 @@
-out_dir: ..\data\processed\pretrain\synthea500
+out_dir: ..\data\processed\pretrain\synthea10k
 loader:
   concepts: [diagnose, medication]
-  data_dir: ..\data\raw\synthea500
+  data_dir: ..\data\raw\synthea10k
   patients_info: patients_info.csv
 features:
   age: true
