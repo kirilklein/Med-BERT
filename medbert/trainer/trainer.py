@@ -103,7 +103,6 @@ class EHRTrainer():
         self.model.train()
         self.setup_run_folder()
         self.save_setup()
-        print(self.args.collate_fn)
         dataloader = DataLoader(self.train_dataset, batch_size=self.args.batch_size, shuffle=True, collate_fn=self.args.collate_fn)
         return dataloader
 
@@ -119,10 +118,7 @@ class EHRTrainer():
             input_ids=batch['concept'],
             attention_mask=batch['attention_mask'],
             token_type_ids=batch['segment'] if 'segment' in batch else None,
-            # position_ids={
-                # 'age': batch['age'] if 'age' in batch else None,
-                # 'abspos': batch['abspos'] if 'abspos' in batch else None
-            # },
+            position_ids=batch['age'].long() if 'age' in batch else None,
             labels=batch['target'] if 'target' in batch else None,
             next_sentence_label=batch['plos'] if 'plos' in batch else None, # 
         )
