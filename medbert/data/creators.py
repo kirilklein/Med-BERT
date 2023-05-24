@@ -34,9 +34,17 @@ class AbsposCreator(BaseCreator):
 class SegmentCreator(BaseCreator):
     feature = id = 'segment'
     def create(self, concepts: pd.DataFrame, patients_info: pd.DataFrame):
-        segments = concepts.groupby('PID')['ADMISSION_ID'].transform(lambda x: pd.factorize(x)[0]+1)
+        # segments = concepts.groupby('PID')['ADMISSION_ID'].transform(lambda x: pd.factorize(x)[0]+1)
+        # rough estimation of segments based on 1d difference of timestamps
+        concepts['TIMESTAMP'] = pd.to_datetime(concepts['TIMESTAMP'])
+        concepts = concepts.sort_values(['PID', 'TIMESTAMP'])
 
-        concepts['SEGMENT'] = segments
+        concepts['DIFF'] = concepts.groupby('PID')['TIMESTAMP'].diff()
+        concepts['NEW_SEGMENT'] = concepts['DIFF'] > pd.Timedelta(days=1)
+        concepts['SEGMENT'] = concepts.groupby('PID')['NEW_SEGMENT'].apply(lambda x: x.astype(int).cumsum()) + 1
+        concepts = concepts.drop(columns=['DIFF', 'NEW_SEGMENT'])
+
+        # concepts['SEGMENT'] = segments
         return concepts
 
 class BackgroundCreator(BaseCreator):
