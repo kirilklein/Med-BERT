@@ -142,8 +142,7 @@ class Excluder():
         for key, values in features.items():
             features[key] = [values[i] for i in kept_indices]
         if outcomes:
-            for key, values in outcomes.items():
-                outcomes[key] = [values[i] for i in kept_indices]
+            outcomes = [outcomes[i] for i in kept_indices]
         if outcomes:
             return features, outcomes
         else:
@@ -204,7 +203,6 @@ class Splitter():
     def split_outcomes(self, outcomes: list)-> dict:
         outcomes_splits = {}
         for set_, split in self.splits.items():
-            print(split)
             outcomes_splits[set_] = outcomes[split] 
         return outcomes_splits
     def save(self, dest: str):
