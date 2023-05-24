@@ -9,7 +9,7 @@ from transformers import BertConfig
 
 def main():
     with initialize(config_path='../configs'):
-        cfg: dict = compose(config_name='trainer.yaml')
+        cfg: dict = compose(config_name='pretrain.yaml')
 
     train_dataset = torch.load(cfg.get('train_dataset', 'dataset.train'))
     val_dataset = torch.load(cfg.get('val_dataset', 'dataset.val'))

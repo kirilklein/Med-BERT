@@ -1,0 +1,4 @@
+train_dataset: ..\data\processed\finetune_death\synthea500\dataset.train
+val_dataset: ..\data\processed\finetune_death\synthea500\dataset.val
+
+model_path: ..\runs\pretrain_test2\

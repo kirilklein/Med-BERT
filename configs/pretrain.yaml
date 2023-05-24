@@ -19,7 +19,7 @@ trainer_args:
   effective_batch_size: 128
   epochs: 2
   info: true
-  run_name: test2
+  run_name: pretrain_test2
 
 collate_fn: null
 
