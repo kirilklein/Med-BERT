@@ -19,17 +19,19 @@ class EHRPerturb(EHRTrainer):
         # Freeze the model
         self.model = PerturbationModel(bert_model, cfg)
        
-        self.noise_simulator = GaussianNoise(self.model, self.cfg)
+    def train(self, **kwargs):
+        self.update_attributes(**kwargs)
+        self.validate_training()
 
-    def train(self):
         dataloader = self.setup_training()
+
         for epoch in range(self.args.epochs):
             train_loop = tqdm(enumerate(dataloader), total=len(dataloader), desc=f'Train Loop')
             epoch_loss = []
             step_loss = 0
             for i, batch in train_loop:
                 batch = self.to_device(batch)
-                # Accumulate gradients
+                # Train step
                 step_loss += self.train_step(batch).item()
                 self.optimizer.step()
                 self.optimizer.zero_grad()
@@ -37,16 +39,10 @@ class EHRPerturb(EHRTrainer):
                     self.scheduler.step()
             self.save_checkpoint(id=f'epoch{epoch}_step{(i+1)}', train_loss=step_loss)
         # Validate (returns None if no validation set is provided)
-        val_loss = self.validate()
+
+    def forward_pass(self, batch: dict):
+        return self.model.forward(batch)
     
-    
-    def train_step(self, batch: dict):
-        original_output = self.bert_forward_pass(batch)        
-        perturbed_embeddings = self.noise_simulator(batch)
-        perturbed_output = self.bert_forward_pass(batch, perturbed_embeddings)
-        loss = self.perturbation_loss(original_output, perturbed_output)
-        loss.backward()
-        return loss
 
     def validate(self):
         if self.val_dataset is None:
@@ -64,22 +60,22 @@ class EHRPerturb(EHRTrainer):
 
         return val_loss / len(val_loop)
 
-    
-        
 
-class PerturbationModel(torch.module):
+class PerturbationModel(torch.nn.Module):
     def __init__(self, bert_model, cfg):
         super().__init__()
         self.cfg = cfg
         self.bert_model = bert_model
         self.freeze_bert()
         self.noise_simulator = GaussianNoise(bert_model, cfg)
+
     def forward(self, batch: dict):
         original_output = self.bert_forward_pass(batch)        
         perturbed_embeddings = self.noise_simulator(batch)
         perturbed_output = self.bert_forward_pass(batch, perturbed_embeddings)
         loss = self.perturbation_loss(original_output, perturbed_output)
-        return {'loss': loss}
+        outputs = ModelOutputs(predictions=original_output.logits, perturbed_predictions=perturbed_output.logits, loss=loss)
+        return outputs
     
     def freeze_bert(self):
         for param in self.bert_model.parameters():
@@ -90,7 +86,7 @@ class PerturbationModel(torch.module):
         concept = batch['concept'] if embeddings is None else None
         segment = batch['segment'] if 'segment' in batch and embeddings is None else None
         position = batch['age'] if 'age' in batch and embeddings is None else None
-        output = self.model(
+        output = self.bert_model(
             input_embeds=embeddings if embeddings is not None else None,
             input_ids=concept,
             attention_mask=batch['attention_mask'],
@@ -103,12 +99,12 @@ class PerturbationModel(torch.module):
         """Calculate the perturbation loss"""
         return 0  
 
-class GaussianNoise(PerturbationModel):
+class GaussianNoise(torch.nn.Module):
     """Simulate Gaussian noise with trainable sigma to add to the embeddings"""
-    def __init__(self, model, cfg):
+    def __init__(self, bert_model, cfg):
         super().__init__()
         self.cfg = cfg
-        self.model = model # BERT model
+        self.bert_model = bert_model # BERT model
         self.min_age = self.cfg.stratification.get('min_age', 40)
         self.max_age = self.cfg.stratification.get('max_age', 80)
         self.age_window = self.cfg.stratification.get('age_window', 5)
@@ -127,7 +123,7 @@ class GaussianNoise(PerturbationModel):
 
     def initialize(self):
         """Initialize the noise module"""
-        num_concepts = len(self.model.bert.embeddings.word_embeddings.weight.data)
+        num_concepts = len(self.bert_model.bert.embeddings.word_embeddings.weight.data)
         num_strata = self.get_num_strata()
         # initialize learnable parameters
         self.sigmas = torch.nn.Parameter(torch.ones(num_concepts, num_strata+1)) # are ones ok?
@@ -169,8 +165,7 @@ class GaussianNoise(PerturbationModel):
     
     def get_summed_embeddings(self, batch: dict):
         """Get the summed embeddings of concept, segment and position embeddings"""
-        batch = self.to_device(batch)
-        embeddings = self.model.bert.embeddings
+        embeddings = self.bert_model.bert.embeddings
         concept_emb = embeddings.word_embeddings(batch['concept']) 
         token_type_emb = embeddings.token_type_embeddings(batch['segment']) if 'segment' in batch else torch.zeros_like(concept_emb)
         position_emb = embeddings.position_embeddings(batch['age']) 
@@ -178,3 +173,8 @@ class GaussianNoise(PerturbationModel):
         return summed_embeddings
     
 
+class ModelOutputs:
+    def __init__(self, predictions=None, perturbed_predictions=None, loss=None):
+        self.predictions = predictions
+        self.perturbed_predictions = perturbed_predictions
+        self.loss = loss
