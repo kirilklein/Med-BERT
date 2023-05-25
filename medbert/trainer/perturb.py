@@ -1,7 +1,8 @@
 import torch
-from omegaconf import DictConfig
+from omegaconf import DictConfig, OmegaConf
 from torch.utils.data import DataLoader, Dataset
 from tqdm import tqdm
+import os
 from trainer.trainer import EHRTrainer
 
 
@@ -66,6 +67,8 @@ class EHRPerturb(EHRTrainer):
 
         return val_loss / len(val_loop)
 
+    def save_setup(self):
+        OmegaConf.save(config=self.args, f=os.path.join(self.run_folder, 'config.yaml'))
 
 class PerturbationModel(torch.nn.Module):
     def __init__(self, bert_model, cfg):
@@ -93,7 +96,7 @@ class PerturbationModel(torch.nn.Module):
         segment = batch['segment'] if 'segment' in batch and embeddings is None else None
         position = batch['age'] if 'age' in batch and embeddings is None else None
         output = self.bert_model(
-            input_embeds=embeddings if embeddings is not None else None,
+            inputs_embeds=embeddings if embeddings is not None else None,
             input_ids=concept,
             attention_mask=batch['attention_mask'],
             token_type_ids=segment,
@@ -128,8 +131,8 @@ class GaussianNoise(torch.nn.Module):
     def __call__(self, batch: dict)->torch.Tensor:
         """Simulate Gaussian noise for the batch"""
         embeddings = self.get_summed_embeddings(batch)
-        indices = self.get_stratum_indices(batch, self.num_age_groups)
-        gaussian_noise = self.simulate_noise(indices)
+        stratum_indices = self.get_stratum_indices(batch)
+        gaussian_noise = self.simulate_noise(batch, stratum_indices, embeddings)
         perturbed_embeddings = embeddings + gaussian_noise
         return perturbed_embeddings
 
@@ -138,13 +141,15 @@ class GaussianNoise(torch.nn.Module):
         num_concepts = len(self.bert_model.bert.embeddings.word_embeddings.weight.data)
         num_strata = self.get_num_strata()
         # initialize learnable parameters
-        self.sigmas = torch.nn.Parameter(torch.ones(num_concepts, num_strata+1)) # are ones ok?
         # the last column is to map all the ones outside the age range
+        return torch.nn.Parameter(torch.ones(num_concepts, num_strata+1)) # are ones ok?
 
-    def simulate_noise(self, indices: torch.Tensor):
+    def simulate_noise(self, batch: dict, indices: torch.Tensor, embeddings: torch.Tensor):
         """Simulate Gaussian noise using the sigmas"""
-        sigmas = self.sigmas[indices]
-        gaussian_noise = torch.normal(mean=torch.ones_like(sigmas), std = sigmas)
+        extended_indices = indices.unsqueeze(-1)
+        extended_concept = batch['concept'].unsqueeze(-1)
+        selected_sigmas = self.sigmas[extended_concept, extended_indices]
+        gaussian_noise = torch.normal(mean=0., std=selected_sigmas.expand_as(embeddings))
         return gaussian_noise
 
     def get_num_strata(self):
