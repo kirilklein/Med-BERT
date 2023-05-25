@@ -1,8 +1,9 @@
 import torch
-from torch.utils.data import Dataset, DataLoader
-from omegaconf import DictConfig, OmegaConf
-from trainer import EHRTrainer
+from omegaconf import DictConfig
+from torch.utils.data import DataLoader, Dataset
 from tqdm import tqdm
+from trainer import EHRTrainer
+
 
 class EHRPerturb(EHRTrainer):
     def __init__(self, 
@@ -43,12 +44,11 @@ class EHRPerturb(EHRTrainer):
              # Save epoch checkpoint
             self.save_checkpoint(id=f'epoch{epoch}_end', train_loss=epoch_loss, val_loss=val_loss, final_step_loss=epoch_loss[-1])
             # Print epoch info
-            self.info(f'Epoch {epoch} train loss: {sum(epoch_loss) / (len(train_loop) / accumulation_steps)}')
+            self.info(f'Epoch {epoch} train loss: {sum(epoch_loss) / (len(train_loop))}')
             self.info(f'Epoch {epoch} val loss: {val_loss}')
-            
+
     def forward_pass(self, batch: dict):
         return self.model.forward(batch)
-    
 
     def validate(self):
         if self.val_dataset is None:
@@ -104,6 +104,12 @@ class PerturbationModel(torch.nn.Module):
     def perturbation_loss(self, original_output, perturbed_output):
         """Calculate the perturbation loss"""
         return 0  
+
+class ModelOutputs:
+    def __init__(self, predictions=None, perturbed_predictions=None, loss=None):
+        self.predictions = predictions
+        self.perturbed_predictions = perturbed_predictions
+        self.loss = loss
 
 class GaussianNoise(torch.nn.Module):
     """Simulate Gaussian noise with trainable sigma to add to the embeddings"""
@@ -179,8 +185,3 @@ class GaussianNoise(torch.nn.Module):
         return summed_embeddings
     
 
-class ModelOutputs:
-    def __init__(self, predictions=None, perturbed_predictions=None, loss=None):
-        self.predictions = predictions
-        self.perturbed_predictions = perturbed_predictions
-        self.loss = loss
