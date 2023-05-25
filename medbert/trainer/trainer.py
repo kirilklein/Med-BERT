@@ -118,7 +118,7 @@ class EHRTrainer():
             input_ids=batch['concept'],
             attention_mask=batch['attention_mask'],
             token_type_ids=batch['segment'] if 'segment' in batch else None,
-            position_ids=batch['age'].long() if 'age' in batch else None,
+            position_ids=batch['age'] if 'age' in batch else None,
             labels=batch['target'] if 'target' in batch else None,
             next_sentence_label=batch['plos'] if 'plos' in batch else None, # 
         )
@@ -194,7 +194,7 @@ class EHRFineTune(EHRTrainer):
             input_ids=batch['concept'],
             attention_mask=batch['attention_mask'],
             token_type_ids=batch['segment'] if 'segment' in batch else None,
-            position_ids=batch['age'].long() if 'age' in batch else None,
+            position_ids=batch['age'] if 'age' in batch else None,
             labels=batch['target'] if 'target' in batch else None,
         )
 
