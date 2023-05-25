@@ -2,7 +2,7 @@ import torch
 from omegaconf import DictConfig
 from torch.utils.data import DataLoader, Dataset
 from tqdm import tqdm
-from trainer import EHRTrainer
+from trainer.trainer import EHRTrainer
 
 
 class EHRPerturb(EHRTrainer):
