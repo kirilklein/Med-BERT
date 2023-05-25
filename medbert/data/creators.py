@@ -86,6 +86,14 @@ class BackgroundCreator(BaseCreator):
         background = pd.DataFrame(background)
         return pd.concat([background, concepts])
 
+class GenderCreator(BaseCreator):
+    feature = id = 'gender'
+    def create(self, concepts: pd.DataFrame, patients_info: pd.DataFrame):
+        merged_df = pd.merge(concepts, patients_info[['PID', 'GENDER']], on='PID', how='left')
+        gender_to_int = self.config.gender
+        merged_df['GENDER'] = merged_df['GENDER'].map(gender_to_int)
+        return merged_df
+
 
 """ SIMPLE EXAMPLES """
 class SimpleValueCreator(BaseCreator):
