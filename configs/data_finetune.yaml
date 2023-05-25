@@ -12,6 +12,9 @@ features:
   segment: true
   background: []
   los: true
+  gender: # needed for stratification during pertruabtion
+    F: 0
+    M: 1
 split_ratios: 
   train: 0.7
   val: 0.2
