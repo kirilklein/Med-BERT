@@ -38,8 +38,14 @@ class EHRPerturb(EHRTrainer):
                 if self.scheduler is not None:
                     self.scheduler.step()
             self.save_checkpoint(id=f'epoch{epoch}_step{(i+1)}', train_loss=step_loss)
-        # Validate (returns None if no validation set is provided)
-
+            # Validate (returns None if no validation set is provided)
+            val_loss = self.validate()
+             # Save epoch checkpoint
+            self.save_checkpoint(id=f'epoch{epoch}_end', train_loss=epoch_loss, val_loss=val_loss, final_step_loss=epoch_loss[-1])
+            # Print epoch info
+            self.info(f'Epoch {epoch} train loss: {sum(epoch_loss) / (len(train_loop) / accumulation_steps)}')
+            self.info(f'Epoch {epoch} val loss: {val_loss}')
+            
     def forward_pass(self, batch: dict):
         return self.model.forward(batch)
     
@@ -53,10 +59,10 @@ class EHRPerturb(EHRTrainer):
         val_loop = tqdm(dataloader, total=len(dataloader), desc='Validation')
         val_loss = 0
         for batch in val_loop:
-            original_output = self.bert_forward_pass(batch)        
-            perturbed_embeddings = self.noise_simulator(batch)
-            perturbed_output = self.bert_forward_pass(batch, perturbed_embeddings)
-            val_loss += self.perturbation_loss(original_output, perturbed_output)
+            batch = self.to_device(batch)
+            with torch.no_grad():
+                outputs = self.forward_pass(batch)
+                val_loss += outputs.loss.item()
 
         return val_loss / len(val_loop)
 
