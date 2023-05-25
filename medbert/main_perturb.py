@@ -4,7 +4,8 @@ import torch
 from hydra import compose, initialize
 from hydra.utils import instantiate
 from torch.optim import AdamW
-from trainer.perturb import EHRPerturb
+from trainer.perturb import EHRSimpleTrainer
+from models.perturb import PerturbationModel
 from transformers import BertConfig, BertForSequenceClassification
 
 
@@ -19,10 +20,12 @@ def main():
     print(f'Loading finetuned BERT model from {cfg.model_path}')
     model_dir = split(cfg.model_path)[0]
     config = BertConfig.from_pretrained(model_dir) 
-    model = BertForSequenceClassification(config)
-    model.load_state_dict(torch.load(cfg.model_path)['model_state_dict'], strict=False)
+    bert_model = BertForSequenceClassification(config)
+    bert_model.load_state_dict(torch.load(cfg.model_path)['model_state_dict'], strict=False)
 
-    model.eval() # we don't want to train the model, just use it to get the embeddings
+    bert_model.eval() # we don't want to train the bertmodel, just use it to get the embeddings
+
+    model = PerturbationModel(bert_model, cfg)
 
     print('Setting up optimizer...')
     opt = cfg.get('optimizer', {})
@@ -34,8 +37,8 @@ def main():
     )
 
     print('Starting training...')
-    trainer = EHRPerturb( 
-        bert_model=model, 
+    trainer = EHRSimpleTrainer( 
+        model=model, 
         optimizer=optimizer,
         train_dataset=train_dataset, 
         val_dataset=val_dataset, 
@@ -43,3 +46,6 @@ def main():
         cfg=cfg,
     )
     trainer.train()
+
+if __name__ == '__main__':
+    main()
