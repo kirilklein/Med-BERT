@@ -4,20 +4,18 @@ class PerturbationModel(torch.nn.Module):
     def __init__(self, bert_model, cfg):
         super().__init__()
         self.cfg = cfg
+        self.lambda_ = self.cfg.get('lambda', 1)
         self.bert_model = bert_model
+        self.K = self.bert_model.bert.embeddings.word_embeddings.weight.data.shape[1] # hidden dimensions?
         self.freeze_bert()
         self.noise_simulator = GaussianNoise(bert_model, cfg)
-        # self.noise_simulator = GaussianNoise(bert_model, cfg)
-
+        
     def forward(self, batch: dict):
         original_output = self.bert_forward_pass(batch)        
         perturbed_embeddings = self.noise_simulator.forward(batch)
         perturbed_output = self.bert_forward_pass(batch, perturbed_embeddings)
         loss = self.perturbation_loss(original_output, perturbed_output)
         outputs = ModelOutputs(predictions=original_output.logits, perturbed_predictions=perturbed_output.logits, loss=loss)
-        print('Sigmas mean',self.noise_simulator.sigmas.mean())
-        print('Sigmas max',self.noise_simulator.sigmas.max())
-        print('Sigmas min',self.noise_simulator.sigmas.min())
         return outputs
     
     def freeze_bert(self):
@@ -39,14 +37,16 @@ class PerturbationModel(torch.nn.Module):
         return output  
     
     def perturbation_loss(self, original_output, perturbed_output):
-        """Calculate the perturbation loss"""
+        """Calculate the perturbation loss 
+        as presented in https://proceedings.mlr.press/v97/guan19a.html"""
         logits = original_output.logits[:,1]
-        print(logits[1])
         perturbed_logits = perturbed_output.logits[:,1]
-        print(perturbed_logits[1])
-        first_term = (logits - perturbed_logits)**2
-        loss = self.noise_simulator.sigmas.mean()
-        return loss
+        squared_diff = (logits - perturbed_logits)**2
+        sigmas = self.noise_simulator.sigmas
+        first_term = -torch.log(sigmas).sum()
+        second_term = 1/(self.K*self.lambda_)*(squared_diff/logits.std())
+        loss = first_term + second_term
+        return loss.mean()
 
 class GaussianNoise(torch.nn.Module):
     """Simulate Gaussian noise with trainable sigma to add to the embeddings"""
@@ -76,7 +76,7 @@ class GaussianNoise(torch.nn.Module):
         num_strata = self.get_num_strata()
         # initialize learnable parameters
         # the last column is to map all the ones outside the age range
-        self.sigmas = torch.nn.Parameter(torch.randn(num_concepts, num_strata+1))
+        self.sigmas = torch.nn.Parameter(torch.ones(num_concepts, num_strata+1))
 
     def simulate_noise(self, batch: dict, indices: torch.Tensor, embeddings: torch.Tensor):
         """Simulate Gaussian noise using the sigmas"""
@@ -97,12 +97,10 @@ class GaussianNoise(torch.nn.Module):
     def get_stratum_indices(self, batch):
         """Get the stratum indices for the batch"""
         age_mask = (batch['age'] >= self.min_age) & (batch['age'] <= self.max_age)
-
         # we map ages starting from min_age to 0, 1, 2, ... based on age_window
         age_strata = torch.floor_divide(batch['age']-self.min_age, self.age_window) 
         # groups run from 0 to num_age_groups-1, and then num_age_groups to 2*num_age_groups-1
         stratum_indices = age_strata + self.num_age_groups * batch['gender']
-
         stratum_indices = torch.where(age_mask, stratum_indices, -1) # by default everyone else is in the last stratum
         return stratum_indices
     

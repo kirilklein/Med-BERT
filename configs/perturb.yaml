@@ -1,12 +1,12 @@
 train_dataset: ..\data\processed\finetune_death\synthea500\dataset.train
 val_dataset: ..\data\processed\finetune_death\synthea500\dataset.val
 
-model_path: runs\finetune_death_test\checkpoint_epoc6_end.pt
+model_path: runs\finetune_death_test\checkpoint_epoch6_end.pt
 
 optimizer:
-  lr: 5e-5
+  lr: 1e-5
   weight_decay: 0
-  epsilon: 1e-6
+  epsilon: 1e-5
 
 trainer_args:
   batch_size: 32
@@ -16,6 +16,8 @@ trainer_args:
   run_name: perturbation_test
 
 stratification:
-  min_age: 40
+  min_age: 20
   max_age: 80
-  age_window: 5
+  age_window: 20
+  
+lambda: 1
