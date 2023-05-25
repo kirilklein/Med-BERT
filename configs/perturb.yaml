@@ -10,7 +10,12 @@ optimizer:
 
 trainer_args:
   batch_size: 32
-  effective_batch_size: 128
+  # effective_batch_size: 128
   epochs: 10
   info: true
-  run_name: finetune_death_perturb_test
+  run_name: perturbation_test
+
+stratification:
+  min_age: 40
+  max_age: 80
+  age_window: 5
