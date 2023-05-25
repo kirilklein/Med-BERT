@@ -28,6 +28,14 @@ class BaseDataset(Dataset):
             return vocabulary
         else:
             raise TypeError(f'Unsupported vocabulary input {type(vocabulary)}')
+        
+    def convert_to_long(self, patient):
+        """
+        Converts all tensors in the patient to longs except abspos
+        """
+        return {
+            key: value.long() for key, value in patient.items() if (isinstance(value, torch.Tensor) and (key != 'abspos'))}
+
 
 class MLM_PLOS_Dataset(BaseDataset):
     def __init__(self, features: dict, **kwargs):
@@ -61,13 +69,7 @@ class MLM_PLOS_Dataset(BaseDataset):
         """
         return (patient['los'].clone().detach()>=self.kwargs['min_los']).any().long()
         
-    def convert_to_long(self, patient):
-        """
-        Converts all tensors in the patient to longs except abspos
-        """
-        return {
-            key: value.long() for key, value in patient.items() if (isinstance(value, torch.Tensor) and (key != 'abspos'))}
-
+   
     def _mask(self, patient: dict):
         concepts = patient['concept']
 
