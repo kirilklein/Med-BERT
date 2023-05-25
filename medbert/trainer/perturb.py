@@ -35,6 +35,8 @@ class EHRPerturb(EHRTrainer):
                 batch = self.to_device(batch)
                 # Train step
                 step_loss += self.train_step(batch).item()
+                tqdm.write(f'Train loss {(i+1)}: {step_loss /(i+1)}')
+                epoch_loss.append(step_loss)
                 self.optimizer.step()
                 self.optimizer.zero_grad()
                 if self.scheduler is not None:
@@ -106,7 +108,11 @@ class PerturbationModel(torch.nn.Module):
     
     def perturbation_loss(self, original_output, perturbed_output):
         """Calculate the perturbation loss"""
-        return 0  
+        logits = torch.nn.functional.softmax(original_output.logits)[:,1]
+        perturbed_logits = torch.nn.functional.softmax(perturbed_output.logits)[:,1]
+        print(logits.shape, perturbed_logits.shape)
+        first_term = (logits - perturbed_logits)**2
+        return first_term.mean()
 
 class ModelOutputs:
     def __init__(self, predictions=None, perturbed_predictions=None, loss=None):
