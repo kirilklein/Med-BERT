@@ -3,7 +3,7 @@ from hydra import initialize, compose
 from hydra.utils import instantiate
 from torch.optim import AdamW
 
-from perturb.perturb import EHRPerturb
+from trainer.perturb import EHRPerturb
 from transformers import BertForSequenceClassification
 from transformers import BertConfig
 from os.path import split
