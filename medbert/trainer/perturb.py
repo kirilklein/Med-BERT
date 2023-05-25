@@ -86,6 +86,7 @@ class PerturbationModel(torch.nn.Module):
         perturbed_output = self.bert_forward_pass(batch, perturbed_embeddings)
         loss = self.perturbation_loss(original_output, perturbed_output)
         outputs = ModelOutputs(predictions=original_output.logits, perturbed_predictions=perturbed_output.logits, loss=loss)
+        print('Sigmas',self.noise_simulator.sigmas[:,4].mean())
         return outputs
     
     def freeze_bert(self):
@@ -155,8 +156,11 @@ class GaussianNoise(torch.nn.Module):
         extended_indices = indices.unsqueeze(-1)
         extended_concept = batch['concept'].unsqueeze(-1)
         selected_sigmas = self.sigmas[extended_concept, extended_indices]
-        gaussian_noise = torch.normal(mean=0., std=selected_sigmas.expand_as(embeddings))
-        return gaussian_noise
+        # Reparameterization trick: Sample noise from standard normal, then scale by selected sigma
+        std_normal_noise = torch.randn_like(embeddings)
+        scaled_noise = std_normal_noise * selected_sigmas
+        
+        return scaled_noise
 
     def get_num_strata(self):
         """Calculate the number of strata for age based on min_age, max_age and age_window"""
