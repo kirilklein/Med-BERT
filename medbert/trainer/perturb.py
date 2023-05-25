@@ -45,7 +45,6 @@ class EHRSimpleTrainer(EHRTrainer):
                 
                 if self.scheduler is not None:
                     self.scheduler.step()
-            self.save_checkpoint(id=f'epoch{epoch}_step{(i+1)}', train_loss=step_loss)
             # Validate (returns None if no validation set is provided)
             val_loss = self.validate()
              # Save epoch checkpoint
