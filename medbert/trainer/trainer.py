@@ -154,7 +154,7 @@ class EHRTrainer():
             random_runname = uuid.uuid4().hex
             self.info(f'Run name not provided. Using random run name: {random_runname}')
             self.args.run_name = random_runname
-        self.run_folder = os.path.join('runs', self.args.run_name)
+        self.run_folder = os.path.join('../runs', self.args.run_name)
 
         if os.path.exists(self.run_folder):
             self.info(f'Run folder {self.run_folder} already exists. Writing files to existing folder')
