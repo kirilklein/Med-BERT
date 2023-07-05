@@ -21,7 +21,11 @@ trainer_args:
   info: true
   run_name: pretrain_test2
 
-collate_fn: null
+scheduler:
+  num_warmup_steps: 10
+  num_training_steps: 100
+
+collate_fn: dynamic_padding
 
 metrics:
   top1:

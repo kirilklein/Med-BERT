@@ -5,7 +5,7 @@ from torch.optim import AdamW
 
 from trainer.trainer import EHRTrainer
 from transformers import BertForPreTraining
-from transformers import BertConfig
+from transformers import BertConfig, get_linear_schedule_with_warmup
 
 def main():
     with initialize(config_path='../configs'):
@@ -28,7 +28,6 @@ def main():
         weight_decay=opt.get('weight_decay', 0.01),
         eps=opt.get('epsilon', 1e-8),
     )
-    
     trainer = EHRTrainer( 
         model=model, 
         optimizer=optimizer,

@@ -4,9 +4,10 @@ from tqdm import tqdm
 import os
 import uuid
 import json
-# from dataloader.collate_fn import dynamic_padding
+from dataloader.collate_fn import dynamic_padding
 from hydra.utils import instantiate
 from omegaconf import DictConfig, OmegaConf
+from transformers import get_linear_schedule_with_warmup
 
 class EHRTrainer():
     def __init__(self, 
@@ -25,7 +26,9 @@ class EHRTrainer():
         self.test_dataset = test_dataset
         self.val_dataset = val_dataset
         self.optimizer = optimizer
-        self.scheduler = scheduler
+        if cfg.scheduler:
+            self.scheduler = get_linear_schedule_with_warmup(optimizer, num_warmup_steps=cfg.scheduler.num_warmup_steps, num_training_steps=cfg.scheduler.num_training_steps)
+
         # Instantiate metrics
         if 'metrics' in cfg:
             self.metrics = {k: instantiate(v) for k, v in cfg.metrics.items()}
@@ -39,7 +42,7 @@ class EHRTrainer():
             'epochs': 10,
             'info': True,
             'save_every_k_steps': float('inf'),
-            'collate_fn': None
+            'collate_fn': dynamic_padding
         }
         
         self.args = OmegaConf.create({**default_args, **args})
