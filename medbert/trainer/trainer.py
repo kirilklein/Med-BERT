@@ -7,7 +7,6 @@ import json
 # from dataloader.collate_fn import dynamic_padding
 from hydra.utils import instantiate
 from omegaconf import DictConfig, OmegaConf
-from evaluation.metrics import PrecisionAtK # instantiate with hydra
 
 class EHRTrainer():
     def __init__(self, 
