@@ -1,11 +1,11 @@
 from torch import nn
 
-class BertEmbeddings(nn.Module):
+class EHREmbeddings(nn.Module):
     """Construct the embeddings from word, segment, age
     """
 
     def __init__(self, config):
-        super(BertEmbeddings, self).__init__()
+        super(EHREmbeddings, self).__init__()
 
         self.word_embeddings = nn.Embedding(config.vocab_size, 
                                             config.hidden_size, 

@@ -5,7 +5,7 @@ from torch.optim import AdamW
 
 from trainer.trainer import EHRTrainer
 from transformers import BertForPreTraining
-from transformers import BertConfig, get_linear_schedule_with_warmup
+from transformers import BertConfig
 
 def main():
     with initialize(config_path='../configs'):
@@ -20,7 +20,6 @@ def main():
             **cfg.get('model', {}),
         )
     )
-
     opt = cfg.get('optimizer', {})
     optimizer = AdamW(
         model.parameters(),
