@@ -8,7 +8,10 @@ model:
   num_hidden_layers: 6
   num_attention_heads: 6
   intermediate_size: 64
-
+embeddings:
+  segment: false
+  age: true
+  abspos: true
 optimizer:
   lr: 5e-5
   weight_decay: 0

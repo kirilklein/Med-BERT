@@ -4,7 +4,8 @@ from tqdm import tqdm
 import os
 import uuid
 import json
-from dataloader.collate_fn import dynamic_padding
+# from dataloader.collate_fn import dynamic_padding
+from medbert.dataloader.collate_fn import dynamic_padding
 from hydra.utils import instantiate
 from omegaconf import DictConfig, OmegaConf
 from transformers import get_linear_schedule_with_warmup
@@ -28,24 +29,24 @@ class EHRTrainer():
         self.optimizer = optimizer
         if cfg.scheduler:
             self.scheduler = get_linear_schedule_with_warmup(optimizer, num_warmup_steps=cfg.scheduler.num_warmup_steps, num_training_steps=cfg.scheduler.num_training_steps)
-
+        self.cfg = cfg
         # Instantiate metrics
         if 'metrics' in cfg:
             self.metrics = {k: instantiate(v) for k, v in cfg.metrics.items()}
         else:
             self.metrics = None
         
-
+        self.scheduler = scheduler
         default_args = {
             'batch_size': 32,
             'effective_batch_size': 512,
             'epochs': 10,
             'info': True,
             'save_every_k_steps': float('inf'),
-            'collate_fn': dynamic_padding
+            'collate_fn': None
         }
         
-        self.args = OmegaConf.create({**default_args, **args})
+        self.args = {**default_args, **args}
     def update_attributes(self, **kwargs):
         for key, value in kwargs.items():
             if key == 'args':
@@ -62,10 +63,10 @@ class EHRTrainer():
         self.update_attributes(**kwargs)
         self.validate_training()
 
-        accumulation_steps: int = self.args.effective_batch_size // self.args.batch_size
+        accumulation_steps: int = self.args['effective_batch_size'] // self.args['batch_size']
         dataloader = self.setup_training()
 
-        for epoch in range(self.args.epochs):
+        for epoch in range(self.args['epochs']):
             train_loop = tqdm(enumerate(dataloader), total=len(dataloader))
             train_loop.set_description(f'Train {epoch}')
             epoch_loss = []
@@ -87,7 +88,7 @@ class EHRTrainer():
                     step_loss = 0
 
                 # Save iteration checkpoint
-                if ((i+1) / accumulation_steps) % self.args.save_every_k_steps == 0:
+                if ((i+1) / accumulation_steps) % self.args['save_every_k_steps'] == 0:
                     self.save_checkpoint(id=f'epoch{epoch}_step{(i+1) // accumulation_steps}', train_loss=step_loss / accumulation_steps)
 
             # Validate (returns None if no validation set is provided)
@@ -105,7 +106,7 @@ class EHRTrainer():
         self.model.train()
         self.setup_run_folder()
         self.save_setup()
-        dataloader = DataLoader(self.train_dataset, batch_size=self.args.batch_size, shuffle=True, collate_fn=self.args.collate_fn)
+        dataloader = DataLoader(self.train_dataset, batch_size=self.args['batch_size'], shuffle=True, collate_fn=self.args['collate_fn'])
         return dataloader
 
     def train_step(self, batch: dict):
@@ -133,19 +134,23 @@ class EHRTrainer():
             return None, None
 
         self.model.eval()
-        dataloader = DataLoader(self.val_dataset, batch_size=self.args.batch_size, shuffle=True, collate_fn=self.args.collate_fn)
+        dataloader = DataLoader(self.val_dataset, batch_size=self.args['batch_size'], shuffle=True, collate_fn=self.args['collate_fn'])
         val_loop = tqdm(dataloader, total=len(dataloader), desc='Validation')
         val_loss = 0
-        metric_values = {name: [] for name in self.metrics}
+        if self.metrics:
+            metric_values = {name: [] for name in self.metrics}
         for batch in val_loop:
             outputs = self.forward_pass(batch)
             val_loss += outputs.loss.item()
-
-            for name, func in self.metrics.items():
-                metric_values[name].append(func(outputs, batch))
+            if self.metrics:
+                for name, func in self.metrics.items():
+                    metric_values[name].append(func(outputs, batch))
 
         self.model.train()
-        return val_loss / len(val_loop), {name: sum(values) / len(values) for name, values in metric_values.items()}
+        if self.metrics:
+            return val_loss / len(val_loop), {name: sum(values) / len(values) for name, values in metric_values.items()}
+        else:
+            return val_loss / len(val_loop), None
 
     def to_device(self, batch: dict) -> None:
         """Moves a batch to the device in-place"""
@@ -157,8 +162,8 @@ class EHRTrainer():
         if self.args.get('run_name') is None:
             random_runname = uuid.uuid4().hex
             self.info(f'Run name not provided. Using random run name: {random_runname}')
-            self.args.run_name = random_runname
-        self.run_folder = os.path.join('../runs', self.args.run_name)
+            self.args['run_name'] = random_runname
+        self.run_folder = os.path.join('../runs', self.args['run_name'])
 
         if os.path.exists(self.run_folder):
             self.info(f'Run folder {self.run_folder} already exists. Writing files to existing folder')
@@ -168,11 +173,9 @@ class EHRTrainer():
         self.info(f'Run folder: {self.run_folder}')
 
     def save_setup(self):
-        
-        OmegaConf.save(config=self.args, f=os.path.join(self.run_folder, 'config.yaml'))
+        # with open(os.path.join(self.run_folder, 'config_args.json'), 'w') as f:
+            # json.dump(self.cfg, f)
         model_config = self.model.config.to_dict()
-        with open(os.path.join(self.run_folder, 'model_config.yaml'), 'w') as f:
-            f.write(OmegaConf.to_yaml(OmegaConf.create(model_config)))
         with open(os.path.join(self.run_folder, 'config.json'), 'w') as f:
             json.dump(model_config, f)
 
@@ -188,7 +191,7 @@ class EHRTrainer():
         }, checkpoint_name)
 
     def info(self, message):
-        if self.args.info:
+        if self.args['info']:
             print(f'[INFO] {message}')
 
 class EHRFineTune(EHRTrainer):

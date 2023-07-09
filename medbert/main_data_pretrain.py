@@ -41,6 +41,10 @@ def main():
     splitter.save(cfg.out_dir)
     train, test, val = splits['train'], splits['test'], splits['val']
 
+    torch.save(train, join(cfg.out_dir, 'train.pt'))
+    torch.save(test, join(cfg.out_dir, 'test.pt'))
+    torch.save(val, join(cfg.out_dir, 'val.pt'))
+    
     print("Tokenizing")
     tokenizer = EHRTokenizer(config=cfg.tokenizer)
     train_encoded = tokenizer(train)

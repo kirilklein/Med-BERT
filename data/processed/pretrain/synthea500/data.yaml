@@ -1,6 +1,8 @@
 out_dir: ..\data\processed\pretrain\synthea500
 loader:
-  concepts: [diagnose, medication]
+  concepts:
+  - diagnose
+  - medication
   data_dir: ..\data\raw\synthea500
   patients_info: patients_info.csv
 features:
@@ -12,7 +14,7 @@ features:
   segment: true
   background: []
   los: true
-split_ratios: 
+split_ratios:
   train: 0.7
   val: 0.2
   test: 0.1
