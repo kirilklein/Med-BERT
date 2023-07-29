@@ -3,7 +3,6 @@ from os.path import join
 
 import torch
 from data.utils import ConceptLoader, Excluder, FeatureMaker, Splitter
-from features.dataset import MLM_PLOS_Dataset
 from features.tokenizer import EHRTokenizer
 from hydra import compose, initialize
 from omegaconf import OmegaConf
@@ -53,15 +52,9 @@ def main():
     test_encoded = tokenizer(test)
     val_encoded = tokenizer(val)
 
-    print("Dataset with MLM and prolonged length of stay")
-    train_dataset = MLM_PLOS_Dataset(train_encoded, vocabulary=tokenizer.vocabulary, **cfg.dataset)
-    test_dataset = MLM_PLOS_Dataset(test_encoded, vocabulary=tokenizer.vocabulary, **cfg.dataset)
-    val_dataset = MLM_PLOS_Dataset(val_encoded, vocabulary=tokenizer.vocabulary, **cfg.dataset)
-
-    print("Saving datasets")
-    torch.save(train_dataset, join(cfg.out_dir, 'dataset.train'))
-    torch.save(test_dataset, join(cfg.out_dir, 'dataset.test'))
-    torch.save(val_dataset,  join(cfg.out_dir, 'dataset.val'))
+    torch.save(train_encoded, join(cfg.out_dir, 'train_encoded.pt'))
+    torch.save(test_encoded, join(cfg.out_dir, 'test_encoded.pt'))
+    torch.save(val_encoded, join(cfg.out_dir, 'val_encoded.pt'))
 
     print("Saving config")
     OmegaConf.save(config=cfg, f=join(cfg.out_dir, 'data.yaml'))

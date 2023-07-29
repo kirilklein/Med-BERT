@@ -2,7 +2,6 @@ from hydra import initialize, compose
 from omegaconf import OmegaConf
 from data.utils import Splitter, ConceptLoader, FeatureMaker, Excluder, Censor, Cleaner
 from features.tokenizer import EHRTokenizer
-from features.dataset import BinaryOutcomeDataset
 import torch
 from os.path import join
 import os
@@ -46,6 +45,11 @@ def main():
     train, test, val = data_splits['train'], data_splits['test'], data_splits['val']
     train_out, test_out, val_out = outcomes_splits['train'], outcomes_splits['test'], outcomes_splits['val']
     
+
+    torch.save(train_out, join(cfg.out_dir, 'train_outcomes.pt'))
+    torch.save(val_out, join(cfg.out_dir, 'val_outcomes.pt'))
+    torch.save(test_out, join(cfg.out_dir, 'test_outcomes.pt'))
+
     print("Tokenizing")
     tokenizer = EHRTokenizer(config=cfg.tokenizer)
     train_encoded = tokenizer(train)
@@ -53,15 +57,11 @@ def main():
     tokenizer.save_vocab(join(cfg.out_dir, 'vocabulary.pt'))
     test_encoded = tokenizer(test)
     val_encoded = tokenizer(val)
+
+    torch.save(train_encoded, join(cfg.out_dir, 'train_encoded.pt'))
+    torch.save(test_encoded, join(cfg.out_dir, 'test_encoded.pt'))
+    torch.save(val_encoded, join(cfg.out_dir, 'val_encoded.pt'))
   
-    print("Dataset with Binary Outcome")
-    train_dataset = BinaryOutcomeDataset(train_encoded, train_out, vocabulary=tokenizer.vocabulary, **cfg.dataset)
-    test_dataset = BinaryOutcomeDataset(test_encoded, test_out, vocabulary=tokenizer.vocabulary, **cfg.dataset)
-    val_dataset = BinaryOutcomeDataset(val_encoded, val_out, vocabulary=tokenizer.vocabulary, **cfg.dataset)
-    print("Saving datasets")
-    torch.save(train_dataset, join(cfg.out_dir, 'dataset.train'))
-    torch.save(test_dataset, join(cfg.out_dir, 'dataset.test'))
-    torch.save(val_dataset,  join(cfg.out_dir, 'dataset.val'))
     print("Saving configs")
     OmegaConf.save(config=cfg, f=join(cfg.out_dir, 'data.yaml'))
     
