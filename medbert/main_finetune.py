@@ -4,9 +4,9 @@ from hydra.utils import instantiate
 from torch.optim import AdamW
 
 from trainer.trainer import EHRFineTune
-from transformers import BertForSequenceClassification
 from transformers import BertConfig
 from features.dataset import BinaryOutcomeDataset
+from models.model import EHRBertForSequenceClassification
 from os.path import split, join
 
 def main():
@@ -29,8 +29,9 @@ def main():
     
     # Load the config from file
     config = BertConfig.from_pretrained(model_dir) 
-    model = BertForSequenceClassification(config)
-    model.load_state_dict(torch.load(cfg.model_path)['model_state_dict'], strict=False)
+    model = EHRBertForSequenceClassification(config)
+    load_result = model.load_state_dict(torch.load(cfg.model_path)['model_state_dict'], strict=False)
+    print("missing keys", load_result.missing_keys)
 
     opt = cfg.get('optimizer', {})
     optimizer = AdamW(

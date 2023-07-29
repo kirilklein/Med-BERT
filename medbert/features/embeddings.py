@@ -49,15 +49,12 @@ class EhrEmbeddings(nn.Module):
             return inputs_embeds
 
         embeddings = self.a * self.concept_embeddings(input_ids)
-        print( 'embeddings', embeddings.shape)
         if token_type_ids is not None:
             segments_embedded = self.segment_embeddings(token_type_ids)
-            print('segments_embedded', segments_embedded.shape)
             embeddings += self.b * segments_embedded
 
         if position_ids is not None:
             ages_embedded = self.age_embeddings(position_ids)
-            print('ages_embedded', ages_embedded.shape)
             embeddings += self.c * ages_embedded
             
         embeddings = self.LayerNorm(embeddings)
