@@ -121,10 +121,10 @@ class MLM_PLOS_Dataset(BaseDataset):
 
 
 class BinaryOutcomeDataset(BaseDataset): 
-    def __init__(self, features: dict, outcomes: torch.tensor, **kwargs):
+    def __init__(self, features: dict, outcomes: torch.tensor, vocabulary: {}, **kwargs):
         super().__init__(features, **kwargs)
         self.outcomes = outcomes
-        self.vocabulary = self.load_vocabulary(self.kwargs.get('vocabulary', 'vocabulary.pt'))
+        self.vocabulary = vocabulary
     def __getitem__(self, index):
         patient = super().__getitem__(index)
         patient['target'] = self.outcomes[index].item()
