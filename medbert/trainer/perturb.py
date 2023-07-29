@@ -33,7 +33,7 @@ class EHRSimpleTrainer(EHRTrainer):
             step_loss = 0
             for i, batch in train_loop:
                 self.optimizer.zero_grad()
-                batch = self.to_device(batch)
+                self.to_device(batch)
                 # Train step
                 outputs = self.forward_pass(batch)
                 outputs.loss.backward() # calculate gradients
@@ -57,14 +57,14 @@ class EHRSimpleTrainer(EHRTrainer):
 
     def validate(self):
         if self.val_dataset is None:
-            return None, None
+            return None
 
         self.model.eval()
         dataloader = DataLoader(self.val_dataset, batch_size=self.args['batch_size'], shuffle=True, collate_fn=self.args['collate_fn'])
         val_loop = tqdm(dataloader, total=len(dataloader), desc='Validation')
         val_loss = 0
         for batch in val_loop:
-            batch = self.to_device(batch)
+            self.to_device(batch)
             with torch.no_grad():
                 outputs = self.forward_pass(batch)
                 val_loss += outputs.loss.item()
