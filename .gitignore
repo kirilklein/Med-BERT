@@ -20,3 +20,7 @@ data/raw/synthea10k/patients_info.csv
 data/raw/synthea10k/concept.medication.csv
 runs
 data/processed/pretrain/synthea500/data.yaml
+medbert/test_train.ipynb
+medbert/tests/test_masking.py
+notebooks/test.ipynb
+data/processed/pretrain/synthea500/data.yaml

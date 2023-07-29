@@ -4,15 +4,20 @@ class PerturbationModel(torch.nn.Module):
     def __init__(self, bert_model, cfg):
         super().__init__()
         self.cfg = cfg
-        self.lambda_ = self.cfg.get('lambda', 1)
+        self.lambda_ = self.cfg.get('lambda', 0.1)
         self.bert_model = bert_model
-        self.K = self.bert_model.bert.embeddings.word_embeddings.weight.data.shape[1] # hidden dimensions?
+        self.K = self.bert_model.bert.embeddings.concept_embeddings.weight.data.shape[1] # hidden dimensions?
         self.freeze_bert()
         self.noise_simulator = GaussianNoise(bert_model, cfg)
-        
+        self.embeddings = self.bert_model.bert.embeddings
+
     def forward(self, batch: dict):
-        original_output = self.bert_forward_pass(batch)        
-        perturbed_embeddings = self.noise_simulator.forward(batch)
+        embeddings = self.embeddings(input_ids=batch['concept'],
+                                     token_type_ids=batch['segment'] if 'segment' in batch else None,
+                                     position_ids=batch['age'] if 'age' in batch else None)
+        
+        original_output = self.bert_forward_pass(batch, embeddings)        
+        perturbed_embeddings = self.noise_simulator.forward(batch, embeddings)
         perturbed_output = self.bert_forward_pass(batch, perturbed_embeddings)
         loss = self.perturbation_loss(original_output, perturbed_output)
         outputs = ModelOutputs(predictions=original_output.logits, perturbed_predictions=perturbed_output.logits, loss=loss)
@@ -62,9 +67,8 @@ class GaussianNoise(torch.nn.Module):
         self.initialize()
         self.strata_dict = self.get_strata_dict()
 
-    def forward(self, batch: dict)->torch.Tensor:
+    def forward(self, batch: dict, embeddings: torch.tensor,)->torch.Tensor:
         """Simulate Gaussian noise for the batch"""
-        embeddings = self.get_summed_embeddings(batch)
         stratum_indices = self.get_stratum_indices(batch)
         gaussian_noise = self.simulate_noise(batch, stratum_indices, embeddings)
         perturbed_embeddings = embeddings + gaussian_noise
@@ -72,7 +76,7 @@ class GaussianNoise(torch.nn.Module):
 
     def initialize(self):
         """Initialize the noise module"""
-        num_concepts = len(self.bert_model.bert.embeddings.word_embeddings.weight.data)
+        num_concepts = len(self.bert_model.bert.embeddings.concept_embeddings.weight.data)
         num_strata = self.get_num_strata()
         # initialize learnable parameters
         # the last column is to map all the ones outside the age range
@@ -111,19 +115,11 @@ class GaussianNoise(torch.nn.Module):
         sample_batch['age'] = torch.arange(0,110,1).repeat(2,1)
         sample_batch['gender'] = torch.arange(0,2,1).repeat(110,1).transpose(0,1)
         for i in range(self.num_strata):
-            strata_dict[i]['age'] = sample_batch['age'][self.get_stratum_indices(sample_batch) == i]
-            strata_dict[i]['gender'] = sample_batch['gender'][self.get_stratum_indices(sample_batch) == i]
+            stratum_indices = self.get_stratum_indices(sample_batch)
+            strata_dict[i]['age'] = sample_batch['age'][stratum_indices == i]
+            strata_dict[i]['gender'] = sample_batch['gender'][stratum_indices == i]
         return strata_dict
-    
-    def get_summed_embeddings(self, batch: dict):
-        """Get the summed embeddings of concept, segment and position embeddings"""
-        embeddings = self.bert_model.bert.embeddings
-        concept_emb = embeddings.word_embeddings(batch['concept']) 
-        token_type_emb = embeddings.token_type_embeddings(batch['segment']) if 'segment' in batch else torch.zeros_like(concept_emb)
-        position_emb = embeddings.position_embeddings(batch['age']) 
-        summed_embeddings = concept_emb + token_type_emb + position_emb
-        return summed_embeddings
-    
+
 
 class ModelOutputs:
     def __init__(self, predictions=None, perturbed_predictions=None, loss=None):

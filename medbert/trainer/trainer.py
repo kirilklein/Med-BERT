@@ -74,7 +74,6 @@ class EHRTrainer():
             for i, batch in train_loop:
                 # Train step
                 step_loss += self.train_step(batch).item()
-
                 # Accumulate gradients
                 if (i+1) % accumulation_steps == 0:
                     self.optimizer.step()
