@@ -27,7 +27,7 @@ class EHRTrainer():
         self.test_dataset = test_dataset
         self.val_dataset = val_dataset
         self.optimizer = optimizer
-        if cfg.scheduler:
+        if cfg.get('scheduler', False):
             self.scheduler = get_linear_schedule_with_warmup(optimizer, num_warmup_steps=cfg.scheduler.num_warmup_steps, num_training_steps=cfg.scheduler.num_training_steps)
         self.cfg = cfg
         # Instantiate metrics
