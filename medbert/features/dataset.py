@@ -33,9 +33,10 @@ class BaseDataset(Dataset):
         """
         Converts all tensors in the patient to longs except abspos
         """
-        return {
-            key: value.long() for key, value in patient.items() if (isinstance(value, torch.Tensor) and (key != 'abspos'))}
-
+        for k, v in patient.items():
+            if isinstance(v, torch.Tensor) and k != 'abspos':
+                patient[k] = v.long()
+        return patient
 
 class MLM_PLOS_Dataset(BaseDataset):
     def __init__(self, features: dict, **kwargs):
@@ -60,6 +61,7 @@ class MLM_PLOS_Dataset(BaseDataset):
             patient['plos'] = self.get_plos(patient)
         patient['concept'] = masked_concepts
         patient['target'] = target
+        
         patient = self.convert_to_long(patient)
         return patient
 
@@ -127,8 +129,7 @@ class BinaryOutcomeDataset(BaseDataset):
         self.vocabulary = vocabulary
     def __getitem__(self, index):
         patient = super().__getitem__(index)
-        patient['target'] = self.outcomes[index].item()
+        patient['target'] = self.outcomes[index]
         patient = self.convert_to_long(patient)
-        # turn all into longs
         return patient
         
