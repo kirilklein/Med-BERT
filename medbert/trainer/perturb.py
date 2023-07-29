@@ -33,7 +33,7 @@ class EHRSimpleTrainer(EHRTrainer):
             step_loss = 0
             for i, batch in train_loop:
                 self.optimizer.zero_grad()
-                batch = self.to_device(batch)
+                self.to_device(batch)
                 # Train step
                 outputs = self.forward_pass(batch)
                 outputs.loss.backward() # calculate gradients
