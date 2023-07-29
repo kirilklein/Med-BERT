@@ -2,11 +2,6 @@ data_dir: ..\data\processed\finetune_death\synthea500
 
 model_path: ..\runs\pretrain_test2\checkpoint_epoch1_end.pt
 
-dataset:
-  masked_ratio: 0.15
-  min_los: 3
-  ignore_special_tokens: true
-
 optimizer:
   lr: 5e-5
   weight_decay: 0

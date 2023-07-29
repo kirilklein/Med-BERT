@@ -21,8 +21,8 @@ def main():
     vocabulary = torch.load(join(data_dir, 'vocabulary.pt'))
 
     print("Dataset with Binary Outcome")
-    train_dataset = BinaryOutcomeDataset(train_encoded, train_out, vocabulary=vocabulary, **cfg.dataset)
-    val_dataset = BinaryOutcomeDataset(val_encoded, val_out, vocabulary=vocabulary, **cfg.dataset)
+    train_dataset = BinaryOutcomeDataset(train_encoded, train_out, vocabulary=vocabulary, **cfg.get('dataset', {}))
+    val_dataset = BinaryOutcomeDataset(val_encoded, val_out, vocabulary=vocabulary, **cfg.get('dataset', {}))
 
     print('Loading BERT model...')
     model_dir = split(cfg.model_path)[0]
