@@ -43,7 +43,11 @@ class Accuracy():
         logits = outputs.logits
         probas = torch.nn.functional.softmax(logits, dim=-1)
         _, predictions = torch.max(probas, dim=-1)
-        return accuracy_score(batch['target'], predictions)
+        try:
+            score = accuracy_score(batch['target'], predictions)
+            return score
+        except Warning("Accuracy score could not be computed"):
+            return None
 
 class Precision():
     def __init__(self) -> None:
@@ -69,6 +73,11 @@ class ROC_AUC():
     def __call__(self, outputs, batch) -> Any:
         logits = outputs.logits
         probas = torch.nn.functional.softmax(logits, dim=-1).detach().cpu().numpy()
-        return roc_auc_score(batch['target'], probas[:,-1])
+        try:
+            score = roc_auc_score(batch['target'], probas[:,-1])
+            return score
+        except:
+            print("ROC AUC score could not be computed")
+            return 0
 
 
