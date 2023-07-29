@@ -111,8 +111,9 @@ class GaussianNoise(torch.nn.Module):
         sample_batch['age'] = torch.arange(0,110,1).repeat(2,1)
         sample_batch['gender'] = torch.arange(0,2,1).repeat(110,1).transpose(0,1)
         for i in range(self.num_strata):
-            strata_dict[i]['age'] = sample_batch['age'][self.get_stratum_indices(sample_batch) == i]
-            strata_dict[i]['gender'] = sample_batch['gender'][self.get_stratum_indices(sample_batch) == i]
+            stratum_indices = self.get_stratum_indices(sample_batch)
+            strata_dict[i]['age'] = sample_batch['age'][stratum_indices == i]
+            strata_dict[i]['gender'] = sample_batch['gender'][stratum_indices == i]
         return strata_dict
     
     def get_summed_embeddings(self, batch: dict):
