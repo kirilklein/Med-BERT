@@ -7,15 +7,24 @@ from torch.optim import AdamW
 from trainer.perturb import EHRSimpleTrainer
 from models.perturb import PerturbationModel
 from transformers import BertConfig, BertForSequenceClassification
-
+from features.dataset import BinaryOutcomeDataset
+from os.path import join
 
 def main():
     with initialize(config_path='../configs'):
         cfg: dict = compose(config_name='perturb.yaml')
 
     print('Loading datasets...')
-    train_dataset = torch.load(cfg.get('train_dataset', 'dataset.train'))
-    val_dataset = torch.load(cfg.get('val_dataset', 'dataset.val'))
+    data_dir = cfg.data_dir
+    train_encoded = torch.load(join(data_dir, 'train_encoded.pt'))
+    train_out = torch.load(join(data_dir, 'train_outcomes.pt'))
+    val_encoded = torch.load(join(data_dir, 'val_encoded.pt'))
+    val_out = torch.load(join(data_dir, 'val_outcomes.pt'))
+    vocabulary = torch.load(join(data_dir, 'vocabulary.pt'))
+
+    print("Dataset with Binary Outcome")
+    train_dataset = BinaryOutcomeDataset(train_encoded, train_out, vocabulary=vocabulary, **cfg.get('dataset', {}))
+    val_dataset = BinaryOutcomeDataset(val_encoded, val_out, vocabulary=vocabulary, **cfg.get('dataset', {}))
 
     print(f'Loading finetuned BERT model from {cfg.model_path}')
     model_dir = split(cfg.model_path)[0]
