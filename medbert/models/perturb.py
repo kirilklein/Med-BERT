@@ -4,15 +4,17 @@ class PerturbationModel(torch.nn.Module):
     def __init__(self, bert_model, cfg):
         super().__init__()
         self.cfg = cfg
-        self.lambda_ = self.cfg.get('lambda', 1)
+        self.lambda_ = self.cfg.get('lambda', 0.1)
         self.bert_model = bert_model
         self.K = self.bert_model.bert.embeddings.word_embeddings.weight.data.shape[1] # hidden dimensions?
         self.freeze_bert()
         self.noise_simulator = GaussianNoise(bert_model, cfg)
-        
+        self.embeddings = None # TODO: Get from bert_model
+    # I compute embeddings twice.
     def forward(self, batch: dict):
-        original_output = self.bert_forward_pass(batch)        
-        perturbed_embeddings = self.noise_simulator.forward(batch)
+        embeddings = self.embeddings(batch)
+        original_output = self.bert_forward_pass(embeddings)        
+        perturbed_embeddings = self.noise_simulator.forward(embeddings)
         perturbed_output = self.bert_forward_pass(batch, perturbed_embeddings)
         loss = self.perturbation_loss(original_output, perturbed_output)
         outputs = ModelOutputs(predictions=original_output.logits, perturbed_predictions=perturbed_output.logits, loss=loss)
@@ -62,9 +64,8 @@ class GaussianNoise(torch.nn.Module):
         self.initialize()
         self.strata_dict = self.get_strata_dict()
 
-    def forward(self, batch: dict)->torch.Tensor:
+    def forward(self, embeddings: torch.tensor, batch: dict)->torch.Tensor:
         """Simulate Gaussian noise for the batch"""
-        embeddings = self.get_summed_embeddings(batch)
         stratum_indices = self.get_stratum_indices(batch)
         gaussian_noise = self.simulate_noise(batch, stratum_indices, embeddings)
         perturbed_embeddings = embeddings + gaussian_noise
