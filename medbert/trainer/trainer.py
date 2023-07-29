@@ -73,10 +73,6 @@ class EHRTrainer():
             step_loss = 0
             for i, batch in train_loop:
                 # Train step
-                print('concept', batch['concept'][1])
-                print('age', batch['age'][1])
-                print('segment', batch['segment'][1])
-                print(batch.keys())
                 step_loss += self.train_step(batch).item()
                 # Accumulate gradients
                 if (i+1) % accumulation_steps == 0:
