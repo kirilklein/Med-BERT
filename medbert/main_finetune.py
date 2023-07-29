@@ -6,14 +6,23 @@ from torch.optim import AdamW
 from trainer.trainer import EHRFineTune
 from transformers import BertForSequenceClassification
 from transformers import BertConfig
-from os.path import split
+from features.dataset import BinaryOutcomeDataset
+from os.path import split, join
 
 def main():
     with initialize(config_path='../configs'):
         cfg: dict = compose(config_name='finetune.yaml')
 
-    train_dataset = torch.load(cfg.get('train_dataset', 'dataset.train'))
-    val_dataset = torch.load(cfg.get('val_dataset', 'dataset.val'))
+    data_dir = cfg.data_dir
+    train_encoded = torch.load(join(data_dir, 'train_encoded.pt'))
+    train_out = torch.load(join(data_dir, 'train_outcomes.pt'))
+    val_encoded = torch.load(join(data_dir, 'val_encoded.pt'))
+    val_out = torch.load(join(data_dir, 'val_outcomes.pt'))
+    vocabulary = torch.load(join(data_dir, 'vocabulary.pt'))
+
+    print("Dataset with Binary Outcome")
+    train_dataset = BinaryOutcomeDataset(train_encoded, train_out, vocabulary=vocabulary, **cfg.dataset)
+    val_dataset = BinaryOutcomeDataset(val_encoded, val_out, vocabulary=vocabulary, **cfg.dataset)
 
     print('Loading BERT model...')
     model_dir = split(cfg.model_path)[0]

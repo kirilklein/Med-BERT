@@ -24,10 +24,6 @@ tokenizer:
   cls_token: true
   padding: true
   truncation: 100
-dataset:
-  masked_ratio: 0.15
-  min_los: 3
-  ignore_special_tokens: true
 outcomes:
   - DEATHDATE
 min_concepts: 2
