@@ -21,14 +21,13 @@ class EHRSimpleTrainer(EHRTrainer):
         super().__init__(model, train_dataset, test_dataset, val_dataset, optimizer, scheduler, args, cfg)
         # Freeze the model
 
-
     def train(self, **kwargs):
         self.update_attributes(**kwargs)
         self.validate_training()
 
         dataloader = self.setup_training()
 
-        for epoch in range(self.args.epochs):
+        for epoch in range(self.args['epochs']):
             train_loop = tqdm(enumerate(dataloader), total=len(dataloader), desc=f'Train Loop')
             epoch_loss = []
             step_loss = 0
@@ -61,7 +60,7 @@ class EHRSimpleTrainer(EHRTrainer):
             return None, None
 
         self.model.eval()
-        dataloader = DataLoader(self.val_dataset, batch_size=self.args.batch_size, shuffle=True, collate_fn=self.args.collate_fn)
+        dataloader = DataLoader(self.val_dataset, batch_size=self.args['batch_size'], shuffle=True, collate_fn=self.args['collate_fn'])
         val_loop = tqdm(dataloader, total=len(dataloader), desc='Validation')
         val_loss = 0
         for batch in val_loop:
