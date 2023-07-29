@@ -22,7 +22,4 @@ tokenizer:
   padding: true
   truncation: 100
 min_concepts: 2
-dataset:
-  masked_ratio: 0.15
-  min_los: 3
-  ignore_special_tokens: true
+

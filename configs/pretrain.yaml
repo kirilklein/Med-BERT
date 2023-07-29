@@ -1,5 +1,9 @@
-train_dataset: ..\data\processed\pretrain\synthea500\dataset.train
-val_dataset: ..\data\processed\pretrain\synthea500\dataset.val
+data_dir: ..\data\processed\pretrain\synthea500
+
+dataset:
+  masked_ratio: 0.15
+  min_los: 3
+  ignore_special_tokens: true
 
 model:
   max_position_embeddings: 512
@@ -20,7 +24,7 @@ optimizer:
 trainer_args:
   batch_size: 32
   effective_batch_size: 128
-  epochs: 2
+  epochs: 5
   info: true
   run_name: pretrain_test2
 

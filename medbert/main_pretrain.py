@@ -1,18 +1,27 @@
 import torch
-from hydra import initialize, compose
+from features.dataset import MLM_PLOS_Dataset
+from hydra import compose, initialize
 from hydra.utils import instantiate
 from torch.optim import AdamW
-
 from trainer.trainer import EHRTrainer
-from transformers import BertForPreTraining
-from transformers import BertConfig
+from transformers import BertConfig, BertForPreTraining
+from os.path import join
+
 
 def main():
     with initialize(config_path='../configs'):
         cfg: dict = compose(config_name='pretrain.yaml')
 
-    train_dataset = torch.load(cfg.get('train_dataset', 'dataset.train'))
-    val_dataset = torch.load(cfg.get('val_dataset', 'dataset.val'))
+
+        print("Dataset with MLM and prolonged length of stay")
+    data_dir = cfg.data_dir
+    train_encoded = torch.load(join(data_dir, 'train_encoded.pt'))
+    val_encoded = torch.load(join(data_dir, 'val_encoded.pt'))
+    vocabulary = torch.load(join(data_dir, 'vocabulary.pt'))
+
+    train_dataset = MLM_PLOS_Dataset(train_encoded, vocabulary=vocabulary, **cfg.dataset)
+    val_dataset = MLM_PLOS_Dataset(val_encoded, vocabulary=vocabulary, **cfg.dataset)
+
     model = BertForPreTraining(
         BertConfig(
             vocab_size=len(train_dataset.vocabulary),
