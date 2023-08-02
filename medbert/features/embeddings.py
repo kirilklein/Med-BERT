@@ -62,20 +62,30 @@ class EhrEmbeddings(nn.Module):
 
         return embeddings
 
-class EHRPerturb(EhrEmbeddings):
-    # TODO: perturb only concept embeddings
+class PerturbedEHREmbeddings(EhrEmbeddings):
+    def __init__(self, config):
+        super().__init__(config)
+
     def forward(
         self,
         input_ids: torch.LongTensor,                  # concepts
         token_type_ids: torch.LongTensor = None,      # segments
         position_ids: torch.LongTensor = None,        # age 
-        inputs_embeds: torch.Tensor = None,
+        genders: torch.Tensor = None, # gender encoded as 0/1
+        noise_simulator = None,                       # noise simulator
         **kwargs
     ):
-        if inputs_embeds is not None:
-            return inputs_embeds
+       
 
-        embeddings = self.a * self.concept_embeddings(input_ids)
+        concept_embeddings = self.concept_embeddings(input_ids)
+        if noise_simulator is not None:
+            stratum_indices = self.get_stratum_indices(age=position_ids, 
+                                                       gender=genders)
+            noise = noise_simulator.simulate_noise(
+                input_ids, stratum_indices, concept_embeddings)
+            concept_embeddings += noise
+
+        embeddings = self.a * concept_embeddings
         if token_type_ids is not None:
             segments_embedded = self.segment_embeddings(token_type_ids)
             embeddings += self.b * segments_embedded
@@ -88,3 +98,7 @@ class EHRPerturb(EhrEmbeddings):
         embeddings = self.dropout(embeddings)
 
         return embeddings
+
+    def set_parameters(self, ehr_embeddings):
+        """Sets the parameters of this instance to the parameters of the given EhrEmbeddings instance."""
+        self.load_state_dict(ehr_embeddings.state_dict())
