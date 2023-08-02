@@ -62,3 +62,29 @@ class EhrEmbeddings(nn.Module):
 
         return embeddings
 
+class EHRPerturb(EhrEmbeddings):
+    # TODO: perturb only concept embeddings
+    def forward(
+        self,
+        input_ids: torch.LongTensor,                  # concepts
+        token_type_ids: torch.LongTensor = None,      # segments
+        position_ids: torch.LongTensor = None,        # age 
+        inputs_embeds: torch.Tensor = None,
+        **kwargs
+    ):
+        if inputs_embeds is not None:
+            return inputs_embeds
+
+        embeddings = self.a * self.concept_embeddings(input_ids)
+        if token_type_ids is not None:
+            segments_embedded = self.segment_embeddings(token_type_ids)
+            embeddings += self.b * segments_embedded
+
+        if position_ids is not None:
+            ages_embedded = self.age_embeddings(position_ids)
+            embeddings += self.c * ages_embedded
+            
+        embeddings = self.LayerNorm(embeddings)
+        embeddings = self.dropout(embeddings)
+
+        return embeddings
