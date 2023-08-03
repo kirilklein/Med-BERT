@@ -59,9 +59,11 @@ class BinarySegmentCreator(BaseCreator):
         concepts = concepts.sort_values(['PID', 'TIMESTAMP'])
         print("Using 3 days as a rough estimate of a new visit")
         concepts['DIFF'] = concepts.groupby('PID')['TIMESTAMP'].diff()
-        concepts['SEGMENT'] = (concepts['DIFF'] > pd.Timedelta(days=3)).astype(int) + 1# 3 days is a rough estimate of a new segment
+        concepts['DIFF'] = concepts['DIFF'].dt.total_seconds() / 60 / 60 / 24
+        concepts['DIFF'].fillna(0, inplace=True)
+        concepts['SEGMENT'] = (concepts['DIFF'] > 3).astype(int) # 3 days is a rough estimate of a new segment
+        concepts['SEGMENT'].fillna(1, inplace=True)
         concepts = concepts.drop(columns=['DIFF'])
-        # concepts['SEGMENT'] = segments
         return concepts
     
 class LOSCreator(BaseCreator):
@@ -85,18 +87,16 @@ class BackgroundCreator(BaseCreator):
                 [(self.prepend_token + patients_info[col].astype(str)).tolist() for col in self.config.background])
         }
 
-        if 'segment' in self.config:
+        if 'segment' in self.config or 'binary_segment' in self.config:
             background['SEGMENT'] = 0
 
         if 'age' in self.config:
-            background['AGE'] = -1
+            background['AGE'] = 119 # older than max age in dataset
 
         if 'abspos' in self.config:
             origin_point = datetime(**self.config.abspos)
             start = (origin_point - patients_info['BIRTHDATE']).dt.total_seconds() / 60 / 60
             background['ABSPOS'] = start.tolist() * len(self.config.background)
-
-        # background['AGE'] = -1
 
         # Prepend background to concepts
         background = pd.DataFrame(background)
