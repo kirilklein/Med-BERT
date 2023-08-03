@@ -10,7 +10,7 @@ features:
     month: 1
     day: 26
   segment: true
-  background: []
+  background: ['GENDER']
   los: true
 split_ratios: 
   train: 0.7
