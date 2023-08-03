@@ -10,15 +10,16 @@ from transformers import BertConfig
 
 def get_model(bertconfig, cfg):
     if cfg.dataset.get('plos', False):
+        print("Using EHRBertForPretraining (MLM+PLOS)")
         return EHRBertForPretraining(bertconfig)
     else:
+        print("Using EHRBertForMaskedLM (MLM)")
         return EHRBertForMaskedLM(bertconfig)
 
 def main():
     with initialize(config_path='../configs'):
         cfg: dict = compose(config_name='pretrain.yaml')
 
-    print("Dataset with MLM and prolonged length of stay")
     data_dir = cfg.data_dir
     train_encoded = torch.load(join(data_dir, 'train_encoded.pt'))
     val_encoded = torch.load(join(data_dir, 'val_encoded.pt'))

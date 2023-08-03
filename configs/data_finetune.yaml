@@ -9,8 +9,8 @@ features:
     year: 1900
     month: 1
     day: 26
-  segment: true
-  background: []
+  binary_segment: true
+  background: ['GENDER']
   los: true
   gender: # needed for stratification during pertruabtion
     F: 0
