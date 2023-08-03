@@ -62,3 +62,39 @@ class EhrEmbeddings(nn.Module):
 
         return embeddings
 
+class PerturbedEHREmbeddings(EhrEmbeddings):
+    def __init__(self, config):
+        super().__init__(config)
+    def forward(
+        self,
+        batch,
+        noise_simulator=None,
+        **kwargs
+    ):
+       
+
+        concept_embeddings = self.concept_embeddings(batch['concept'])
+        if noise_simulator is not None:
+            stratum_indices = noise_simulator.get_stratum_indices(age=batch['age'], 
+                                                       gender=batch['gender'])
+            noise = noise_simulator.simulate_noise(
+                batch['concept'], stratum_indices, concept_embeddings)
+            concept_embeddings += noise
+
+        embeddings = self.a * concept_embeddings
+        if batch.get('segment', None) is not None:
+            segments_embedded = self.segment_embeddings(batch['segment'])
+            embeddings += self.b * segments_embedded
+
+        if batch.get('age', None) is not None:
+            ages_embedded = self.age_embeddings(batch['age'])
+            embeddings += self.c * ages_embedded
+            
+        embeddings = self.LayerNorm(embeddings)
+        embeddings = self.dropout(embeddings)
+
+        return embeddings
+
+    def set_parameters(self, ehr_embeddings):
+        """Sets the parameters of this instance to the parameters of the given EhrEmbeddings instance."""
+        self.load_state_dict(ehr_embeddings.state_dict())

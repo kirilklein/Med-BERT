@@ -1,4 +1,5 @@
 import torch
+from features.embeddings import PerturbedEHREmbeddings
 
 class PerturbationModel(torch.nn.Module):
     def __init__(self, bert_model, cfg):
@@ -9,20 +10,21 @@ class PerturbationModel(torch.nn.Module):
         self.K = self.bert_model.bert.embeddings.concept_embeddings.weight.data.shape[1] # hidden dimensions?
         self.freeze_bert()
         self.noise_simulator = GaussianNoise(bert_model, cfg)
+
         self.embeddings = self.bert_model.bert.embeddings
 
-    def forward(self, batch: dict):
-        embeddings = self.embeddings(input_ids=batch['concept'],
-                                     token_type_ids=batch['segment'] if 'segment' in batch else None,
-                                     position_ids=batch['age'] if 'age' in batch else None)
+        self.embeddings_perturb = PerturbedEHREmbeddings(self.bert_model.config)
+        self.embeddings_perturb.set_parameters(self.embeddings)
         
-        original_output = self.bert_forward_pass(batch, embeddings)        
-        perturbed_embeddings = self.noise_simulator.forward(batch, embeddings)
+
+    def forward(self, batch: dict):
+        original_output = self.bert_forward_pass(batch)  
+        perturbed_embeddings = self.embeddings_perturb(batch, self.noise_simulator)
         perturbed_output = self.bert_forward_pass(batch, perturbed_embeddings)
         loss = self.perturbation_loss(original_output, perturbed_output)
         outputs = ModelOutputs(predictions=original_output.logits, perturbed_predictions=perturbed_output.logits, loss=loss)
         return outputs
-    
+
     def freeze_bert(self):
         for param in self.bert_model.parameters():
             param.requires_grad = False
@@ -67,13 +69,6 @@ class GaussianNoise(torch.nn.Module):
         self.initialize()
         self.strata_dict = self.get_strata_dict()
 
-    def forward(self, batch: dict, embeddings: torch.tensor,)->torch.Tensor:
-        """Simulate Gaussian noise for the batch"""
-        stratum_indices = self.get_stratum_indices(batch)
-        gaussian_noise = self.simulate_noise(batch, stratum_indices, embeddings)
-        perturbed_embeddings = embeddings + gaussian_noise
-        return perturbed_embeddings
-
     def initialize(self):
         """Initialize the noise module"""
         num_concepts = len(self.bert_model.bert.embeddings.concept_embeddings.weight.data)
@@ -82,10 +77,10 @@ class GaussianNoise(torch.nn.Module):
         # the last column is to map all the ones outside the age range
         self.sigmas = torch.nn.Parameter(torch.ones(num_concepts, num_strata+1))
 
-    def simulate_noise(self, batch: dict, indices: torch.Tensor, embeddings: torch.Tensor):
+    def simulate_noise(self, concepts, indices: torch.Tensor, embeddings: torch.Tensor):
         """Simulate Gaussian noise using the sigmas"""
         extended_indices = indices.unsqueeze(-1)
-        extended_concept = batch['concept'].unsqueeze(-1)
+        extended_concept = concepts.unsqueeze(-1)
         selected_sigmas = self.sigmas[extended_concept, extended_indices]
         # Reparameterization trick: Sample noise from standard normal, then scale by selected sigma
         std_normal_noise = torch.randn_like(embeddings)
@@ -98,13 +93,13 @@ class GaussianNoise(torch.nn.Module):
         num_age_strata = int((self.max_age - self.min_age) / self.age_window)
         return 2 * num_age_strata # 2 genders
     
-    def get_stratum_indices(self, batch):
+    def get_stratum_indices(self, age: torch.Tensor, gender: torch.Tensor):
         """Get the stratum indices for the batch"""
-        age_mask = (batch['age'] >= self.min_age) & (batch['age'] <= self.max_age)
+        age_mask = (age >= self.min_age) & (age <= self.max_age)
         # we map ages starting from min_age to 0, 1, 2, ... based on age_window
-        age_strata = torch.floor_divide(batch['age']-self.min_age, self.age_window) 
+        age_strata = torch.floor_divide(age-self.min_age, self.age_window) 
         # groups run from 0 to num_age_groups-1, and then num_age_groups to 2*num_age_groups-1
-        stratum_indices = age_strata + self.num_age_groups * batch['gender']
+        stratum_indices = age_strata + self.num_age_groups * gender
         stratum_indices = torch.where(age_mask, stratum_indices, -1) # by default everyone else is in the last stratum
         return stratum_indices
     
@@ -112,12 +107,12 @@ class GaussianNoise(torch.nn.Module):
         """Get the strata dictionary"""
         strata_dict = {i:{} for i in range(self.num_strata)}
         sample_batch = {}
-        sample_batch['age'] = torch.arange(0,110,1).repeat(2,1)
-        sample_batch['gender'] = torch.arange(0,2,1).repeat(110,1).transpose(0,1)
+        sample_age = torch.arange(0,110,1).repeat(2,1)
+        sample_gender = torch.arange(0,2,1).repeat(110,1).transpose(0,1)
         for i in range(self.num_strata):
-            stratum_indices = self.get_stratum_indices(sample_batch)
-            strata_dict[i]['age'] = sample_batch['age'][stratum_indices == i]
-            strata_dict[i]['gender'] = sample_batch['gender'][stratum_indices == i]
+            stratum_indices = self.get_stratum_indices(sample_age, sample_gender)
+            strata_dict[i]['age'] = sample_age[stratum_indices == i]
+            strata_dict[i]['gender'] = sample_gender[stratum_indices == i]
         return strata_dict
 
 
