@@ -116,14 +116,16 @@ class EHRTrainer():
 
     def forward_pass(self, batch: dict):
         self.to_device(batch)
-        return self.model(
-            input_ids=batch['concept'],
-            attention_mask=batch['attention_mask'],
-            token_type_ids=batch['segment'] if 'segment' in batch else None,
-            position_ids=batch['age'] if 'age' in batch else None,
-            labels=batch['target'] if 'target' in batch else None,
-            next_sentence_label=batch['plos'] if 'plos' in batch else None, # 
-        )
+        model_input = {
+            'input_ids': batch['concept'],
+            'attention_mask': batch['attention_mask'],
+            'token_type_ids': batch['segment'] if 'segment' in batch else None,
+            'position_ids': batch['age'] if 'age' in batch else None,
+            'labels': batch['target'] if 'target' in batch else None,
+        }
+        if 'plos' in batch and self.train_dataset.plos:
+            model_input['next_sentence_label'] = batch['plos']
+        return self.model(**model_input)
 
     def backward_pass(self, loss):
         loss.backward()

@@ -41,7 +41,7 @@ class BaseDataset(Dataset):
 class MLM_PLOS_Dataset(BaseDataset):
     def __init__(self, features: dict, **kwargs):
         super().__init__(features, **kwargs)
-        self.plos = True
+        self.plos = self.kwargs.get('plos', False)
         self.min_los = self.kwargs.get('min_los', 0)
 
         if self.min_los==0:

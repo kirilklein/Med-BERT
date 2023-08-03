@@ -3,11 +3,16 @@ from os.path import join
 import torch
 from features.dataset import MLM_PLOS_Dataset
 from hydra import compose, initialize
-from models.model import EHRBertForPretraining
+from models.model import EHRBertForPretraining, EHRBertForMaskedLM
 from torch.optim import AdamW
 from trainer.trainer import EHRTrainer
 from transformers import BertConfig
 
+def get_model(bertconfig, cfg):
+    if cfg.dataset.get('plos', False):
+        return EHRBertForPretraining(bertconfig)
+    else:
+        return EHRBertForMaskedLM(bertconfig)
 
 def main():
     with initialize(config_path='../configs'):
@@ -22,13 +27,12 @@ def main():
     train_dataset = MLM_PLOS_Dataset(train_encoded, vocabulary=vocabulary, **cfg.dataset)
     val_dataset = MLM_PLOS_Dataset(val_encoded, vocabulary=vocabulary, **cfg.dataset)
 
-    model = EHRBertForPretraining(
-        BertConfig(
+    bertconfig = BertConfig(
             vocab_size=len(train_dataset.vocabulary),
             type_vocab_size=int(train_dataset.max_segments),
             **cfg.get('model', {}),
         )
-    )
+    model = get_model(bertconfig, cfg)
     opt = cfg.get('optimizer', {})
     optimizer = AdamW(
         model.parameters(),

@@ -2,7 +2,8 @@ data_dir: ..\data\processed\pretrain\synthea500
 
 dataset:
   masked_ratio: 0.15
-  min_los: 3
+  plos: false
+  min_los: 0
   ignore_special_tokens: true
 
 model:
