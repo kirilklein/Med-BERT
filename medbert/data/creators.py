@@ -16,7 +16,7 @@ class AgeCreator(BaseCreator):
         birthdates = pd.Series(patients_info['BIRTHDATE'].values, index=patients_info['PID']).to_dict()
         # Calculate approximate age
         ages = (((concepts['TIMESTAMP'] - concepts['PID'].map(birthdates)).dt.days / 365.25) + 0.5).round()
-
+        ages = ages.fillna(-1)
         concepts['AGE'] = ages
         return concepts
 
@@ -32,7 +32,7 @@ class AbsposCreator(BaseCreator):
         return concepts
 
 class SegmentCreator(BaseCreator):
-    feature = id = 'segment'
+    feature = id = 'segment_deprecated'
     def create(self, concepts: pd.DataFrame, patients_info: pd.DataFrame):
         # segments = concepts.groupby('PID')['ADMISSION_ID'].transform(lambda x: pd.factorize(x)[0]+1)
         # rough estimation of segments based on 1d difference of timestamps
@@ -41,10 +41,24 @@ class SegmentCreator(BaseCreator):
 
         concepts['DIFF'] = concepts.groupby('PID')['TIMESTAMP'].diff()
         print("Using 3 days as a rough estimation of a new visit")
-        concepts['NEW_SEGMENT'] = concepts['DIFF'] > pd.Timedelta(days=3) # 3 days is a rough estimation of a new segment
+        concepts['NEW_SEGMENT'] = concepts['DIFF'] > pd.Timedelta(days=3) # 3 days is a rough estimate of a new segment
         concepts['SEGMENT'] = concepts.groupby('PID', group_keys=False)['NEW_SEGMENT'].apply(lambda x: x.astype(int).cumsum()) + 1
         concepts = concepts.drop(columns=['DIFF', 'NEW_SEGMENT'])
 
+        # concepts['SEGMENT'] = segments
+        return concepts
+    
+class BinarySegmentCreator(BaseCreator):
+    feature = id = 'segment'
+    def create(self, concepts: pd.DataFrame, patients_info: pd.DataFrame):
+        # segments = concepts.groupby('PID')['ADMISSION_ID'].transform(lambda x: pd.factorize(x)[0]+1)
+        # rough estimation of segments based on 1d difference of timestamps
+        concepts['TIMESTAMP'] = pd.to_datetime(concepts['TIMESTAMP'])
+        concepts = concepts.sort_values(['PID', 'TIMESTAMP'])
+        print("Using 3 days as a rough estimate of a new visit")
+        concepts['DIFF'] = concepts.groupby('PID')['TIMESTAMP'].diff()
+        concepts['SEGMENT'] = (concepts['DIFF'] > pd.Timedelta(days=3)).astype(int) + 1# 3 days is a rough estimate of a new segment
+        concepts = concepts.drop(columns=['DIFF'])
         # concepts['SEGMENT'] = segments
         return concepts
     
