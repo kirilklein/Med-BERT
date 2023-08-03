@@ -15,14 +15,11 @@ class PerturbationModel(torch.nn.Module):
 
         self.embeddings_perturb = PerturbedEHREmbeddings(self.bert_model.config)
         self.embeddings_perturb.set_parameters(self.embeddings)
+        
 
     def forward(self, batch: dict):
-        original_output = self.bert_forward_pass(batch)        
-        perturbed_embeddings = self.embeddings_perturb(batch['concept'], 
-                                                       batch['segment'] if 'segment' in batch else None,
-                                                       batch['age'] if 'age' in batch else None,
-                                                       batch['gender'] if 'gender' in batch else None,
-                                                       self.noise_simulator)
+        original_output = self.bert_forward_pass(batch)  
+        perturbed_embeddings = self.embeddings_perturb(batch, self.noise_simulator)
         perturbed_output = self.bert_forward_pass(batch, perturbed_embeddings)
         loss = self.perturbation_loss(original_output, perturbed_output)
         outputs = ModelOutputs(predictions=original_output.logits, perturbed_predictions=perturbed_output.logits, loss=loss)
@@ -110,12 +107,12 @@ class GaussianNoise(torch.nn.Module):
         """Get the strata dictionary"""
         strata_dict = {i:{} for i in range(self.num_strata)}
         sample_batch = {}
-        sample_batch['age'] = torch.arange(0,110,1).repeat(2,1)
-        sample_batch['gender'] = torch.arange(0,2,1).repeat(110,1).transpose(0,1)
+        sample_age = torch.arange(0,110,1).repeat(2,1)
+        sample_gender = torch.arange(0,2,1).repeat(110,1).transpose(0,1)
         for i in range(self.num_strata):
-            stratum_indices = self.get_stratum_indices(sample_batch)
-            strata_dict[i]['age'] = sample_batch['age'][stratum_indices == i]
-            strata_dict[i]['gender'] = sample_batch['gender'][stratum_indices == i]
+            stratum_indices = self.get_stratum_indices(sample_age, sample_gender)
+            strata_dict[i]['age'] = sample_age[stratum_indices == i]
+            strata_dict[i]['gender'] = sample_gender[stratum_indices == i]
         return strata_dict
 
 

@@ -65,33 +65,29 @@ class EhrEmbeddings(nn.Module):
 class PerturbedEHREmbeddings(EhrEmbeddings):
     def __init__(self, config):
         super().__init__(config)
-
     def forward(
         self,
-        input_ids: torch.LongTensor,                  # concepts
-        token_type_ids: torch.LongTensor = None,      # segments
-        position_ids: torch.LongTensor = None,        # age 
-        genders: torch.Tensor = None, # gender encoded as 0/1
-        noise_simulator = None,                       # noise simulator
+        batch,
+        noise_simulator=None,
         **kwargs
     ):
        
 
-        concept_embeddings = self.concept_embeddings(input_ids)
+        concept_embeddings = self.concept_embeddings(batch['concept'])
         if noise_simulator is not None:
-            stratum_indices = self.get_stratum_indices(age=position_ids, 
-                                                       gender=genders)
+            stratum_indices = noise_simulator.get_stratum_indices(age=batch['age'], 
+                                                       gender=batch['gender'])
             noise = noise_simulator.simulate_noise(
-                input_ids, stratum_indices, concept_embeddings)
+                batch['concept'], stratum_indices, concept_embeddings)
             concept_embeddings += noise
 
         embeddings = self.a * concept_embeddings
-        if token_type_ids is not None:
-            segments_embedded = self.segment_embeddings(token_type_ids)
+        if batch.get('segment', None) is not None:
+            segments_embedded = self.segment_embeddings(batch['segment'])
             embeddings += self.b * segments_embedded
 
-        if position_ids is not None:
-            ages_embedded = self.age_embeddings(position_ids)
+        if batch.get('age', None) is not None:
+            ages_embedded = self.age_embeddings(batch['age'])
             embeddings += self.c * ages_embedded
             
         embeddings = self.LayerNorm(embeddings)
