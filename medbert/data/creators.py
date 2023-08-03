@@ -32,7 +32,8 @@ class AbsposCreator(BaseCreator):
         return concepts
 
 class SegmentCreator(BaseCreator):
-    feature = id = 'segment_deprecated'
+    feature = 'segment' 
+    id = 'segment'
     def create(self, concepts: pd.DataFrame, patients_info: pd.DataFrame):
         # segments = concepts.groupby('PID')['ADMISSION_ID'].transform(lambda x: pd.factorize(x)[0]+1)
         # rough estimation of segments based on 1d difference of timestamps
@@ -49,7 +50,8 @@ class SegmentCreator(BaseCreator):
         return concepts
     
 class BinarySegmentCreator(BaseCreator):
-    feature = id = 'segment'
+    feature = 'segment' 
+    id = 'binary_segment'
     def create(self, concepts: pd.DataFrame, patients_info: pd.DataFrame):
         # segments = concepts.groupby('PID')['ADMISSION_ID'].transform(lambda x: pd.factorize(x)[0]+1)
         # rough estimation of segments based on 1d difference of timestamps
